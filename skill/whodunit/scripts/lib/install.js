@@ -1,14 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync, } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
-const owner = "@coreplane/local-debug", receiptName = ".local-debug-install.json";
+const owner = "@coreplane/whodunit", receiptName = ".local-debug-install.json";
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 export function targetPaths(agent) {
     return agent === "claude"
-        ? [".claude/skills/local-debug"]
+        ? [".claude/skills/whodunit"]
         : agent === "all"
-            ? [".agents/skills/local-debug", ".claude/skills/local-debug"]
-            : [".agents/skills/local-debug"];
+            ? [".agents/skills/whodunit", ".claude/skills/whodunit"]
+            : [".agents/skills/whodunit"];
 }
 export function validateOwned(receipt, actual) {
     if (!receipt || typeof receipt !== "object")

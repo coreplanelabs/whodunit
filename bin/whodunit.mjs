@@ -4,14 +4,14 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 if (Number(process.versions.node.split(".")[0]) < 22) {
-	console.error("Local Debug requires Node 22 or newer.");
+	console.error("Whodunit requires Node 22 or newer.");
 	process.exit(1);
 }
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), ".."),
 	args = process.argv.slice(2);
 if (["local", "history", "card"].includes(args[0])) {
 	const { dispatchCli, readBounded } = await import(
-		"../skill/local-debug/scripts/lib/cli-api.js"
+		"../skill/whodunit/scripts/lib/cli-api.js"
 	);
 	process.exitCode = await dispatchCli(args, {
 		read: readBounded,
@@ -21,7 +21,7 @@ if (["local", "history", "card"].includes(args[0])) {
 	});
 } else if (args[0] === "--help") {
 	console.log(
-		"npx @coreplane/local-debug [--root PROJECT] [--agent all|codex|claude|opencode]\nInstall for automatic skill discovery in this project.\nData helpers: local, history, card.",
+		"npx @coreplane/whodunit [--root PROJECT] [--agent all|codex|claude|opencode]\nInstall for automatic skill discovery in this project.\nData helpers: local, history, card.",
 	);
 } else {
 	try {
@@ -40,21 +40,21 @@ if (["local", "history", "card"].includes(args[0])) {
 		if (!["all", "codex", "claude", "opencode"].includes(agent))
 			throw Error("Choose a supported agent.");
 		const { installSkill } = await import(
-			"../skill/local-debug/scripts/lib/install.js"
+			"../skill/whodunit/scripts/lib/install.js"
 		);
 		const manifest = JSON.parse(
 			readFileSync(resolve(packageRoot, "package.json"), "utf8"),
 		);
 		const result = installSkill(
 			options.get("--root") ?? process.cwd(),
-			resolve(packageRoot, "skill/local-debug"),
+			resolve(packageRoot, "skill/whodunit"),
 			manifest.version,
 			agent,
 		);
 		console.log(
 			result.changed
-				? "Local Debug installed for your coding agents."
-				: "Local Debug is already installed.",
+				? "Whodunit installed for your coding agents."
+				: "Whodunit is already installed.",
 		);
 		console.log(
 			"Ask your agent what went wrong. If it caches skills, start a new chat.",

@@ -6,7 +6,7 @@ import path from "node:path";
 const base = path.resolve(".cache/install-smoke-ci");
 assert.ok(!fs.existsSync(base), "Use a fresh smoke directory.");
 fs.mkdirSync(base, { recursive: true });
-const bin = path.resolve("bin/local-debug.mjs");
+const bin = path.resolve("bin/whodunit.mjs");
 const run = (root) =>
 	execFileSync(process.execPath, [bin, "--root", root], {
 		encoding: "utf8",
@@ -18,9 +18,9 @@ assert.match(run(project), /installed/);
 assert.match(run(project), /already installed/);
 for (const dir of [".agents", ".claude"])
 	assert.ok(
-		fs.existsSync(path.join(project, dir, "skills/local-debug/SKILL.md")),
+		fs.existsSync(path.join(project, dir, "skills/whodunit/SKILL.md")),
 	);
-const modified = path.join(project, ".agents/skills/local-debug/SKILL.md");
+const modified = path.join(project, ".agents/skills/whodunit/SKILL.md");
 fs.appendFileSync(modified, "\nKeep my note.\n");
 assert.throws(() => run(project));
 assert.match(fs.readFileSync(modified, "utf8"), /Keep my note/);
@@ -34,7 +34,7 @@ assert.equal(fs.readdirSync(outside).length, 0);
 const extraRoot = path.join(base, "extra-project");
 fs.mkdirSync(extraRoot);
 run(extraRoot);
-const extra = path.join(extraRoot, ".agents/skills/local-debug/private.txt");
+const extra = path.join(extraRoot, ".agents/skills/whodunit/private.txt");
 fs.writeFileSync(extra, "Keep these private bytes.");
 assert.throws(() => run(extraRoot));
 assert.equal(fs.readFileSync(extra, "utf8"), "Keep these private bytes.");

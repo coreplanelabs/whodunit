@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
-const owner = "@coreplane/local-debug",
+const owner = "@coreplane/whodunit",
 	receiptName = ".local-debug-install.json";
 export type InstallAgent = "all" | "codex" | "claude" | "opencode";
 export interface InstallReceipt {
@@ -24,10 +24,10 @@ const digest = (bytes: Uint8Array) =>
 	createHash("sha256").update(bytes).digest("hex");
 export function targetPaths(agent: InstallAgent): string[] {
 	return agent === "claude"
-		? [".claude/skills/local-debug"]
+		? [".claude/skills/whodunit"]
 		: agent === "all"
-			? [".agents/skills/local-debug", ".claude/skills/local-debug"]
-			: [".agents/skills/local-debug"];
+			? [".agents/skills/whodunit", ".claude/skills/whodunit"]
+			: [".agents/skills/whodunit"];
 }
 export function validateOwned(
 	receipt: unknown,

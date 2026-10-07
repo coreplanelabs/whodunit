@@ -5,7 +5,7 @@ A local debugging skill for coding agents. Connect a failure to relevant files, 
 From your project:
 
 ```sh
-npx @coreplane/local-debug
+npx @coreplane/whodunit
 ```
 
 Then ask your coding agent what went wrong. The installer registers the skill for automatic discovery in Codex, Claude Code and OpenCode. If an already-running client caches skills, start a new chat; you do not need to give it a skill-file path.

@@ -1,5 +1,5 @@
 ---
-name: local-debug
+name: whodunit
 description: Use when the user asks what broke, what did I mess up, why something stopped working, or what changed in their repository. Investigate using local files, errors, relevant history and available agent sessions. Identify a supported cause or the missing evidence, and explain it concisely using the user's own tools and inference.
 ---
 

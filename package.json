@@ -1,5 +1,5 @@
 {
-  "name": "@coreplane/local-debug",
+  "name": "@coreplane/whodunit",
   "version": "0.1.0",
   "description": "Trace local failures through code, relevant history and agent context.",
   "type": "module",
@@ -8,17 +8,17 @@
     "node": ">=22"
   },
   "bin": {
-    "local-debug": "bin/local-debug.mjs"
+    "whodunit": "bin/whodunit.mjs"
   },
   "exports": {
     ".": {
-      "types": "./skill/local-debug/scripts/lib/index.d.ts",
-      "import": "./skill/local-debug/scripts/lib/index.js"
+      "types": "./skill/whodunit/scripts/lib/index.d.ts",
+      "import": "./skill/whodunit/scripts/lib/index.js"
     }
   },
   "files": [
     "bin",
-    "skill",
+    "skill/whodunit",
     "README.md"
   ],
   "scripts": {
@@ -35,7 +35,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/coreplanelabs/local-debug.git"
+    "url": "git+https://github.com/coreplanelabs/whodunit.git"
   },
   "homepage": "https://debug.polycorp.foo",
   "publishConfig": {

@@ -82,13 +82,13 @@ export async function dispatchCli(
 ): Promise<number> {
 	if (args.length === 1 && args[0] === "--help") {
 		io.out(
-			"local-debug local --help\nlocal-debug history --help\nlocal-debug card --help\n",
+			"whodunit local --help\nwhodunit history --help\nwhodunit card --help\n",
 		);
 		return 0;
 	}
 	if (args[0] === "history") {
 		const usage =
-			"local-debug history --repo PATH --path FILE [--search LITERAL]\nRead up to three relevant local Git changes; no inference, network or session messages.\n";
+			"whodunit history --repo PATH --path FILE [--search LITERAL]\nRead up to three relevant local Git changes; no inference, network or session messages.\n";
 		if (args.length === 2 && args[1] === "--help") {
 			io.out(usage);
 			return 0;
@@ -124,11 +124,11 @@ export async function dispatchCli(
 	}
 	if (args[0] === "card") {
 		const usage =
-			"local-debug card <report.json> [--format text|html|fragment]\nText is the default; HTML is a standalone local browser report; fragment is for supported inline viewers.\n";
+			"whodunit card <report.json> [--format text|html|fragment]\nText is the default; HTML is a standalone local browser report; fragment is for supported inline viewers.\n";
 		if (args.length === 2 && args[1] === "--help") {
 			io.out(
 				usage +
-					"local-debug card <report.json> --output REPORT.html\nSave the interactive browser report and print a short terminal summary.\n",
+					"whodunit card <report.json> --output REPORT.html\nSave the interactive browser report and print a short terminal summary.\n",
 			);
 			return 0;
 		}
@@ -190,7 +190,7 @@ export async function dispatchCli(
 	if (args[0] === "local") {
 		if (args.length === 2 && args[1] === "--help") {
 			io.out(
-				"local-debug local --repo PATH [--symptom TEXT] [--error-file LOG]\nCollect bounded local Git/source/error context for your existing agent.\nNo network, inference, recovery or agent messages. Your coding agent interprets the context; session tools depend on its client.\n",
+				"whodunit local --repo PATH [--symptom TEXT] [--error-file LOG]\nCollect bounded local Git/source/error context for your existing agent.\nNo network, inference, recovery or agent messages. Your coding agent interprets the context; session tools depend on its client.\n",
 			);
 			return 0;
 		}

@@ -268,7 +268,7 @@ export function renderDebugCard(input) {
 #${root} .dc-cause{max-width:680px}#${root} .dc-check-heading{margin:24px 0 10px}#${root} .dc-checks{width:100%;border-collapse:collapse;table-layout:fixed}#${root} .dc-checks th{font-weight:500;text-align:left;color:var(--dc-muted);font-size:12px}#${root} .dc-checks th,#${root} .dc-checks td{padding:12px 8px 12px 0;vertical-align:top;overflow-wrap:anywhere;border-bottom:1px solid var(--dc-line)}#${root} .dc-checks th:first-child{width:34%}#${root} .dc-verdict{font-size:12px;color:var(--dc-muted)}#${root} .dc-checks summary{padding-top:8px}
 </style>
 <div class="dc-scope">${e(card.scope)}</div><h2>${e(card.title)}</h2><p class="dc-context">${e(context)}</p>${analysis}${relatedHtml}${card.nextCheck ? `<div class="dc-next"><span>If useful</span><p>${e(card.nextCheck)}</p></div>` : ""}
-<footer class="dc-brand" style="margin-top:20px;padding-top:12px;border-top:1px solid var(--dc-line);font-size:12px;color:var(--dc-muted)">Fix and prevent production issues with <a style="color:inherit" href="https://polylane.com/?utm_source=local-debug&amp;utm_medium=report" target="_blank" rel="noopener noreferrer">Polylane ↗</a></footer>
+<footer class="dc-brand" style="margin-top:20px;padding-top:12px;border-top:1px solid var(--dc-line);font-size:12px;color:var(--dc-muted)">Fix and prevent production issues with <a style="color:inherit" href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=report" target="_blank" rel="noopener noreferrer">Polylane ↗</a></footer>
 </section>\n`;
 }
 export function renderDebugText(input) {
@@ -311,7 +311,7 @@ export function renderDebugText(input) {
     const graphText = card.graph
         ? `\n${card.graph.title}:\n${card.graph.edges.map((edge) => `${card.graph.nodes.find((n) => n.id === edge.from).label} ${edge.kind === "contradicts" ? "-x->" : edge.kind === "supports" ? "..>" : "->"} ${card.graph.nodes.find((n) => n.id === edge.to).label}`).join("\n")}\n`
         : "";
-    return `${card.title}\n\n${context}\n\n${analysis}${graphText}${refs ? `\nEvidence:\n${refs}\n` : ""}${card.nextCheck ? `\nIf useful: ${card.nextCheck}\n` : ""}\nFix and prevent production issues: https://polylane.com/?utm_source=local-debug&utm_medium=report\n`;
+    return `${card.title}\n\n${context}\n\n${analysis}${graphText}${refs ? `\nEvidence:\n${refs}\n` : ""}${card.nextCheck ? `\nIf useful: ${card.nextCheck}\n` : ""}\nFix and prevent production issues: https://polylane.com/?utm_source=whodunit&utm_medium=report\n`;
 }
 export function renderDebugDocument(input) {
     const card = parseDebugCard(input);
