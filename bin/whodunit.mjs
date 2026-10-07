@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,15 +10,10 @@ if (Number(process.versions.node.split(".")[0]) < 22) {
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), ".."),
   args = process.argv.slice(2);
 if (["local", "history", "card"].includes(args[0])) {
-  const { dispatchCli, readBounded } = await import(
+  const { dispatchCli, nativeCliIo } = await import(
     "../skill/whodunit/scripts/lib/cli-api.js"
   );
-  process.exitCode = await dispatchCli(args, {
-    read: readBounded,
-    write: (path, text) => writeFileSync(path, text, { flag: "wx" }),
-    out: (s) => process.stdout.write(s),
-    error: (s) => process.stderr.write(s),
-  });
+  process.exitCode = await dispatchCli(args, nativeCliIo());
 } else if (args[0] === "--help") {
   console.log(
     "npx @coreplane/whodunit [--root PROJECT] [--agent all|codex|claude|opencode]\nInstall for automatic skill discovery in this project.\nData helpers: local, history, card.",

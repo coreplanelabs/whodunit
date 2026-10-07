@@ -6,7 +6,8 @@ Make the report self-contained. Put two plain-language sentences of context insi
 
 The model provider does not determine the display:
 
-- Codex Desktop or a client with a confirmed inline visualization surface: render the report and return only its supported content reference. No separate introductory paragraph is needed.
+- Codex Desktop: run `card /absolute/report.json --inline` and return the helper's exact content reference. The helper selects the current chat's permitted visualization folder. No separate introductory paragraph is needed.
+- Other confirmed inline clients: use that client's supported output location and reference. A filesystem path being writable does not prove the display can read it.
 - Terminal: create the local browser report with `card report.json --output /absolute/new-report.html` and return its short terminal summary and path. Keep full evidence in the browser report. Unknown clients without local writing receive concise text. Use ASCII only when a diagram explains a relationship; do not emit HTML or assume Mermaid renders.
 - A saved browser report: generate a self-contained local HTML file when wanted. Do not automatically open it or upload reports to the distribution website.
 
@@ -19,16 +20,12 @@ Write a bounded `debug-card/1` record to a task-owned local artifact directory. 
 ```sh
 node <skill-directory>/scripts/triage.mjs card /absolute/report.json --format text
 node <skill-directory>/scripts/triage.mjs card /absolute/report.json --format html > /absolute/report.html
-node <skill-directory>/scripts/triage.mjs card /absolute/report.json --format fragment > /absolute/issue-fragment.html
+node <skill-directory>/scripts/triage.mjs card /absolute/report.json --inline
 ```
 
-Codex Desktop's supported inline reference:
+The inline command writes a fragment and prints only Codex's supported reference. Its output folder comes from `CODEX_THREAD_ID` and `CODEX_HOME` (default `~/.codex`); the date is the thread's creation date, not today's date. It rejects missing or invalid thread context, symlinked directories and oversized fragments before returning a reference. Never use an arbitrary worklog or repository path in a Codex inline reference: Codex may reject it with `Invalid visualization read request` even when the HTML is valid. Keep the input JSON wherever the task permits; let the helper choose the display file's path.
 
-```text
-visualize{"path":"/absolute/issue-fragment.html"}
-```
-
-That reference is not portable to a terminal or another client. The standalone report has no remote resources or host APIs. Optional graph interaction uses a locally generated script permitted by its exact CSP hash.
+If Codex host context is unavailable, use the saved browser-report or text route. Other inline clients may use `--format fragment` with their own verified destination. Codex references are not portable to a terminal or another client. The standalone report has no remote resources or host APIs. Optional graph interaction uses a locally generated script permitted by its exact CSP hash.
 
 Illustrative record; this is not evidence about a user's repository:
 

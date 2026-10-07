@@ -30,7 +30,7 @@ Ask your agent what went wrong, or invoke the skill directly:
 
 Claude Code and OpenCode use `/whodunit`; Codex supports `$whodunit`. Give the actual symptom or error. You do not need to tell the agent to read a skill-file path.
 
-Supported visual clients get a concise report with selectable graph nodes and sources. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report; suggested next steps are optional.
+Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves the report in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report; suggested next steps are optional.
 
 ## Scope
 

@@ -4,7 +4,9 @@ export interface CliIo {
     out(text: string): void;
     error(text: string): void;
     write?(path: string, text: string): void;
+    inline?(fragment: string): string;
 }
+export declare function nativeCliIo(): CliIo;
 export interface FileIo {
     open(path: string): number;
     stat(fd: number): {

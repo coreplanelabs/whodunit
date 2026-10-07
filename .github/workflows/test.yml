@@ -24,4 +24,5 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run verify
       - run: node scripts/install-smoke.mjs
+      - run: node scripts/inline-smoke.mjs
       - run: git diff --exit-code -- skill/whodunit/scripts/lib

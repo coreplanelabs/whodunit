@@ -35,6 +35,7 @@ jobs:
       - run: bun run verify
       - run: git diff --exit-code -- skill/whodunit/scripts/lib
       - run: node scripts/install-smoke.mjs
+      - run: node scripts/inline-smoke.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: npm-candidate

@@ -1,7 +1,9 @@
-import { closeSync, constants, fstatSync, openSync, readSync } from "node:fs";
+import { closeSync, constants, fstatSync, openSync, readSync, writeFileSync, } from "node:fs";
+import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { renderDebugCard, renderDebugDocument, renderDebugText, renderTerminalSummary, } from "./card.js";
 import { InputError } from "./errors.js";
+import { saveCodexInline } from "./inline.js";
 import { collectLocal, collectLocalHistory, validateErrorFile, } from "./local.js";
 import { hasControlCharacters } from "./validation.js";
 const MAX_INPUT_BYTES = 4 * 1024 * 1024;
@@ -15,6 +17,15 @@ const parseJson = (text) => {
         throw new InputError("Provide valid JSON.");
     }
 };
+export function nativeCliIo() {
+    return {
+        read: readBounded,
+        write: (path, text) => writeFileSync(path, text, { flag: "wx" }),
+        inline: (fragment) => saveCodexInline(fragment, process.env.CODEX_THREAD_ID, process.env.CODEX_HOME ?? resolve(homedir(), ".codex")),
+        out: (text) => process.stdout.write(text),
+        error: (text) => process.stderr.write(text),
+    };
+}
 const fileIo = {
     open: (path) => openSync(path, constants.O_RDONLY | constants.O_NONBLOCK | (constants.O_NOFOLLOW ?? 0)),
     stat: fstatSync,
@@ -82,8 +93,25 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
         const usage = "whodunit card <report.json> [--format text|html|fragment]\nText is the default; HTML is a standalone local browser report; fragment is for supported inline viewers.\n";
         if (args.length === 2 && args[1] === "--help") {
             io.out(usage +
+                "whodunit card <report.json> --inline\nSave in this Codex thread's visualization folder and print its inline reference.\n" +
                 "whodunit card <report.json> --output REPORT.html\nSave the interactive browser report and print a short terminal summary.\n");
             return 0;
+        }
+        if (args.length === 3 && args[2] === "--inline") {
+            try {
+                if (!args[1] || args[1].startsWith("-"))
+                    throw new InputError("Choose a report JSON file.");
+                if (!io.inline)
+                    throw new InputError("This client cannot save a Codex inline report. Use --output for a browser report.");
+                const fragment = renderDebugCard(parseJson(io.read(args[1])));
+                const path = io.inline(fragment);
+                io.out(`visualize${JSON.stringify({ path })}\n`);
+                return 0;
+            }
+            catch (error) {
+                io.error(`${error instanceof InputError ? error.message : "Cannot save the inline report in the Codex visualization folder."}\n`);
+                return 1;
+            }
         }
         if (args.length === 4 && args[2] === "--output") {
             try {
