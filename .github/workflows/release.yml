@@ -46,7 +46,6 @@ jobs:
         run: node -e "const p=require('./package.manifest.json');if(process.env.GITHUB_REF!=='refs/tags/v'+p.version)throw Error('Release tag must match the package version')"
       - name: Check registry publication
         id: publication
-        if: github.event_name == 'release' || inputs.prepare_only == false
         run: bun scripts/publication-status.ts
       - name: Publish the verified artifact
         if: (github.event_name == 'release' || inputs.prepare_only == false) && steps.publication.outputs.published != 'true'
