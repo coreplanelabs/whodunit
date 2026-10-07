@@ -1,6 +1,6 @@
 {
   "name": "@coreplane/whodunit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Trace local failures through code, relevant history and agent context.",
   "type": "module",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "type": "git",
     "url": "git+https://github.com/coreplanelabs/whodunit.git"
   },
-  "homepage": "https://debug.polycorp.foo",
+  "homepage": "https://whodunit.dev",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"

@@ -32,11 +32,17 @@ const run = (args, taskEnv = env) =>
     encoding: "utf8",
     env: taskEnv,
   });
-const result = run(["--inline"]);
+const result = run(["--inline", "--actions"]);
 assert.equal(result.status, 0, result.stderr);
-const match = result.stdout.match(/^visualize(\{[^\n]+\})\n$/u);
-assert.ok(match, "Expected only the inline reference");
+const match = result.stdout.match(/^visualize(\{[^\n]+\})\n/u);
+assert.ok(match, "Expected the inline reference first");
 const report = JSON.parse(match[1]);
+assert.ok(result.stdout.includes(":codex-followup[Fix it]"));
+assert.ok(result.stdout.includes(":codex-followup[Fix and enable auto-fix]"));
+const fallback = run(["--inline"]);
+assert.equal(fallback.status, 0);
+assert.ok(fallback.stdout.includes("Reply yes, no, or always"));
+assert.ok(!fallback.stdout.includes(":codex-followup["));
 assert.equal(
   path.dirname(report.path),
   path.join(home, "visualizations", "2023", "11", "14", thread),

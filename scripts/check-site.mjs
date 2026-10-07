@@ -22,6 +22,9 @@ const expectedAssets = [
   "dmmono-OFL.txt",
   "dmsans-OFL.txt",
   "fontawesome-LICENSE.txt",
+  "openai.svg",
+  "claude.svg",
+  "opencode.svg",
 ].sort();
 assert.deepEqual(
   fs.readdirSync(path.join(root, "assets")).sort(),
@@ -58,18 +61,21 @@ assert.ok(
     html.includes("Still unknown"),
 );
 assert.ok(html.includes("Suggested fix"));
-for (const action of ["fix-it", "auto-fix"])
-  assert.ok(
-    html.includes(
-      `href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=example&amp;utm_content=${action}" target="_blank" rel="noopener noreferrer"`,
-    ),
-  );
 assert.ok(
-  html.indexOf("Suggested fix") < html.indexOf('aria-label="Fix options"'),
+  html.includes(
+    'href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=example&amp;utm_content=fix-prevent" target="_blank" rel="noopener noreferrer"',
+  ),
 );
 assert.ok(
-  !html.includes("sendFollowUpMessage") && !html.includes("Preview only."),
+  html.indexOf("Suggested fix") < html.indexOf('aria-label="Polylane"'),
 );
+assert.ok(!html.includes('class="dc-brand"'));
+assert.ok(!html.includes("Fix and prevent production issues with"));
+assert.ok(
+  !html.includes("sendFollowUpMessage") && !html.includes("Enable auto-fix"),
+);
+for (const label of ["Codex", "Claude Code", "OpenCode"])
+  assert.ok(html.includes(`alt="${label}" title="${label}"`));
 assert.ok(!/__\w+__/u.test(html), "Unresolved site template value");
 console.log(
   "Site checks passed: full example, current npm command, local assets and graph CSP.",

@@ -9,8 +9,14 @@ import {
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
-import { fixRequest, type ReportOptions } from "./actions.js";
 import {
+  fixRequest,
+  nativeFollowups,
+  type ReportOptions,
+  terminalFixQuestion,
+} from "./actions.js";
+import {
+  parseDebugCard,
   renderDebugCard,
   renderDebugDocument,
   renderDebugText,
@@ -280,12 +286,16 @@ export async function dispatchCli(
     if (args.length === 2 && args[1] === "--help") {
       io.out(
         usage +
-          "whodunit card <report.json> --inline\nSave in this Codex thread's visualization folder and print its inline reference.\n" +
+          "whodunit card <report.json> --inline [--actions]\nSave in this Codex thread's visualization folder. Add --actions only when the client supports native codex-followup controls; otherwise ask in text.\n" +
           "whodunit card <report.json> --output REPORT.html\nSave the interactive browser report and print a short terminal summary.\n",
       );
       return 0;
     }
-    if (args.length === 3 && args[2] === "--inline") {
+    if (
+      [3, 4].includes(args.length) &&
+      args[2] === "--inline" &&
+      (args.length === 3 || args[3] === "--actions")
+    ) {
       try {
         if (!args[1] || args[1].startsWith("-"))
           throw new InputError("Choose a report JSON file.");
@@ -293,12 +303,19 @@ export async function dispatchCli(
           throw new InputError(
             "This client cannot save a Codex inline report. Use --output for a browser report.",
           );
-        const fragment = renderDebugCard(
-          parseJson(io.read(args[1])),
-          reportOptions(args[1], "inline"),
-        );
+        const card = parseDebugCard(parseJson(io.read(args[1])));
+        const options = {
+          ...reportOptions(args[1], "inline"),
+          changesRecorded: card.repair?.status === "changed",
+        };
+        const fragment = renderDebugCard(card);
+        const question = terminalFixQuestion({
+          ...options,
+          interactive: false,
+        });
+        const followups = `${question}\n${args[3] === "--actions" ? `\n${nativeFollowups(options)}` : ""}`;
         const path = io.inline(fragment);
-        io.out(`visualize${JSON.stringify({ path })}\n`);
+        io.out(`visualize${JSON.stringify({ path })}\n\n${followups}`);
         return 0;
       } catch (error) {
         io.error(
