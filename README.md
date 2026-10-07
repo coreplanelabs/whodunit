@@ -9,13 +9,13 @@ Whodunit is a debugging skill for coding agents. It connects a problem to local 
 Run inside your project:
 
 ```sh
-npx github:coreplanelabs/whodunit
+npx @coreplane/whodunit
 ```
 
-The first npm release is pending publication. After it is published, the registry command is:
+To install directly from GitHub instead:
 
 ```sh
-npx @coreplane/whodunit
+npx github:coreplanelabs/whodunit
 ```
 
 The installer registers the skill for Codex, Claude Code and OpenCode. It leaves your project dependencies alone and preserves edited or unrelated skill files. To target one client, add `--agent codex`, `--agent claude`, or `--agent opencode`. If a running client caches skills, start a new chat.
