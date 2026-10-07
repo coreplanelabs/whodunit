@@ -43,4 +43,5 @@ export declare function parseDebugCard(value: unknown): DebugCard;
 export declare function renderDebugCard(input: unknown): string;
 export declare function renderDebugText(input: unknown): string;
 export declare function renderDebugDocument(input: unknown): string;
+export declare function renderTerminalSummary(input: unknown, reportPath: string): string;
 export {};

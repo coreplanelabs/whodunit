@@ -3,6 +3,7 @@ export interface CliIo {
     read(path: string): string;
     out(text: string): void;
     error(text: string): void;
+    write?(path: string, text: string): void;
 }
 export interface FileIo {
     open(path: string): number;

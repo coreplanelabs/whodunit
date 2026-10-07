@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,6 +15,7 @@ if (["local", "history", "card"].includes(args[0])) {
 	);
 	process.exitCode = await dispatchCli(args, {
 		read: readBounded,
+		write: (path, text) => writeFileSync(path, text, { flag: "wx" }),
 		out: (s) => process.stdout.write(s),
 		error: (s) => process.stderr.write(s),
 	});

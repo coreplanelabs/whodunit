@@ -344,3 +344,42 @@ test("graph labels and evidence stay escaped; the browser permits only the gener
 	expect(text).toContain("-> Reader uses old name");
 	expect(html).toContain('data-panel="reader"');
 });
+
+test("terminal delivery saves the graph and prints a bounded summary without leaking failed writes", async () => {
+	const f = graphFixture();
+	let out = "",
+		errors = "",
+		saved = "";
+	const io = {
+		read: () => JSON.stringify(f),
+		out: (s: string) => {
+			out += s;
+		},
+		error: (s: string) => {
+			errors += s;
+		},
+		write: (_path: string, html: string) => {
+			saved = html;
+		},
+	};
+	expect(
+		await dispatchCli(["card", "report.json", "--output", "report.html"], io),
+	).toBe(0);
+	expect(saved).toContain("dg-map");
+	expect(out).toContain("Visual report:");
+	expect(out.split("\n").length).toBeLessThanOrEqual(12);
+	expect(out).not.toContain("/selected/trace.txt");
+	expect(errors).toBe("");
+	out = "";
+	errors = "";
+	expect(
+		await dispatchCli(["card", "report.json", "--output", "report.html"], {
+			...io,
+			write: () => {
+				throw Error("private overwrite detail");
+			},
+		}),
+	).toBe(1);
+	expect(out).toBe("");
+	expect(errors).not.toContain("private overwrite detail");
+});

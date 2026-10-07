@@ -4,6 +4,7 @@ export {
 	renderDebugCard,
 	renderDebugDocument,
 	renderDebugText,
+	renderTerminalSummary,
 } from "./card.js";
 export type { DebugGraph } from "./graph.js";
 export {

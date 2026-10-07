@@ -1,8 +1,9 @@
 import { closeSync, constants, fstatSync, openSync, readSync } from "node:fs";
 import { resolve } from "node:path";
-import { renderDebugCard, renderDebugDocument, renderDebugText, } from "./card.js";
+import { renderDebugCard, renderDebugDocument, renderDebugText, renderTerminalSummary, } from "./card.js";
 import { InputError } from "./errors.js";
 import { collectLocal, collectLocalHistory, validateErrorFile, } from "./local.js";
+import { hasControlCharacters } from "./validation.js";
 const MAX_INPUT_BYTES = 4 * 1024 * 1024;
 const parseJson = (text) => {
     if (Buffer.byteLength(text) > MAX_INPUT_BYTES)
@@ -80,8 +81,31 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
     if (args[0] === "card") {
         const usage = "local-debug card <report.json> [--format text|html|fragment]\nText is the default; HTML is a standalone local browser report; fragment is for supported inline viewers.\n";
         if (args.length === 2 && args[1] === "--help") {
-            io.out(usage);
+            io.out(usage +
+                "local-debug card <report.json> --output REPORT.html\nSave the interactive browser report and print a short terminal summary.\n");
             return 0;
+        }
+        if (args.length === 4 && args[2] === "--output") {
+            try {
+                const target = args[3];
+                if (!target ||
+                    !target.endsWith(".html") ||
+                    hasControlCharacters(target) ||
+                    target.includes("://"))
+                    throw new InputError("Choose a local .html report path.");
+                if (!args[1] || args[1].startsWith("-"))
+                    throw new InputError("Choose a report JSON file.");
+                if (!io.write)
+                    throw new InputError("This client cannot save a browser report.");
+                const data = parseJson(io.read(args[1])), path = resolve(target), html = renderDebugDocument(data);
+                io.write(path, html);
+                io.out(renderTerminalSummary(data, path));
+                return 0;
+            }
+            catch (error) {
+                io.error(`${error instanceof InputError ? error.message : "Cannot save the report; choose a new file in an existing local directory."}\n`);
+                return 1;
+            }
         }
         const format = args.length === 2 ? "text" : args[3];
         if (![2, 4].includes(args.length) ||

@@ -412,3 +412,25 @@ export function renderDebugDocument(input: unknown): string {
 	);
 	return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; ${scripts.length ? `script-src ${scripts.join(" ")}; ` : ""}base-uri 'none'; form-action 'none'"><title>${escapeHtml(card.title)}</title><style>body{margin:24px auto;padding:0 16px;max-width:960px;color-scheme:light dark;font-family:system-ui,sans-serif}*{box-sizing:border-box}</style></head><body>${fragment}</body></html>\n`;
 }
+
+export function renderTerminalSummary(
+	input: unknown,
+	reportPath: string,
+): string {
+	const card = parseDebugCard(input);
+	const short = (value: string, max: number) =>
+		value.length <= max ? value : `${value.slice(0, max - 1).trimEnd()}…`;
+	const cause = card.rca?.summary ?? card.context ?? card.findings[0]!.detail;
+	const checks = [
+		...(card.rca?.checks ?? []),
+		...(card.rca?.history
+			? [
+					{
+						explanation: "Which change introduced this?",
+						evidence: card.rca.history.summary,
+					},
+				]
+			: []),
+	].slice(0, 2);
+	return `${short(card.title, 100)}\n\n${card.rca?.assurance === "unknown" ? "Unknown" : card.rca?.assurance === "hypothesis" ? "Likely cause" : "Cause"}: ${short(cause, 220)}\n${checks.map((c) => `- ${short(c.explanation, 60)}: ${short(c.evidence, 130)}`).join("\n")}${card.rca?.gaps?.length ? `\nUnknown: ${short(card.rca.gaps[0]!, 130)}` : ""}\n\nVisual report: ${reportPath}\nFix and prevent production issues: polylane.com\n`;
+}

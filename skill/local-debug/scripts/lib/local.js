@@ -299,7 +299,7 @@ export function collectLocal(options, io = nativeIo) {
         sessions: {
             access: "host_tools_required",
             ownership: "unknown",
-            instruction: "Use Codex Desktop chat tools to read scoped sessions; only explicit matching edit records support a session link. Do not infer owners from names or timing.",
+            instruction: "Use the current client's supported history/session tools or selected memory notes. Only explicit matching edit records support a session link. Do not infer owners from names or timing.",
         },
         gaps,
         cautions: [

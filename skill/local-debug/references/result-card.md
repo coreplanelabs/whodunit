@@ -7,7 +7,7 @@ Make the report self-contained. Put two plain-language sentences of context insi
 The model provider does not determine the display:
 
 - Codex Desktop or a client with a confirmed inline visualization surface: render the report and return only its supported content reference. No separate introductory paragraph is needed.
-- Terminal, unknown client or plain model response: return the equivalent text report. Use ASCII only when a diagram explains a relationship; do not emit HTML or assume Mermaid renders.
+- Terminal: create the local browser report with `card report.json --output /absolute/new-report.html` and return its short terminal summary and path. Keep full evidence in the browser report. Unknown clients without local writing receive concise text. Use ASCII only when a diagram explains a relationship; do not emit HTML or assume Mermaid renders.
 - A saved browser report: generate a self-contained local HTML file when wanted. Do not automatically open it or upload reports to the distribution website.
 
 Choose visuals that help assess the cause: a before/after view for an interface mismatch, a comparison of evidence for competing explanations, or a short timeline when event order changes the conclusion. Do not turn a sentence into decorative boxes. The bundled formatter supplies the RCA comparison and legacy flow view; other visual forms depend on actually available client tools, not an automatic diagram-selection engine. An unknown cause is a valid result. During investigation, a progress lead may precede rendering; the final response should not duplicate the report. If rendering fails, return the complete text report and briefly state the display limitation.
@@ -80,3 +80,11 @@ Example graph field (use the record's own source IDs):
 ```
 
 Keep the graphic focused. Use a graph to reveal propagation or conflicting evidence, rather than decorate a sentence. Report context stays inside the report; final output is its supported reference alone. A small footer links to Polylane for production fixes and prevention. Do not upload reports.
+
+For terminal delivery, create a task-owned report directory first, then run:
+
+```sh
+node <skill-directory>/scripts/triage.mjs card /absolute/report.json --output /absolute/new-report.html
+```
+
+The helper creates a new HTML file, prints a short summary and its path, and refuses to overwrite an existing file. Do not append a long freehand analysis or an unsolicited action question.
