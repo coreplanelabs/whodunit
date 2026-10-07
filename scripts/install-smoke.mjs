@@ -38,3 +38,27 @@ assert.equal(fs.readFileSync(extra, "utf8"), "Keep these private bytes.");
 console.log(
   "Installed discovery paths, repeat install, edited/additional content and symlink containment passed.",
 );
+const profile = path.join(base, "user-profile");
+fs.mkdirSync(profile);
+const globalOutput = execFileSync(process.execPath, [bin, "--home", profile], {
+  cwd: outside,
+  encoding: "utf8",
+});
+assert.match(globalOutput, /Whodunit is installed/);
+for (const dir of [
+  ".agents/skills",
+  ".claude/skills",
+  ".config/opencode/skills",
+])
+  assert.ok(fs.existsSync(path.join(profile, dir, "whodunit/SKILL.md")));
+assert.ok(!fs.existsSync(path.join(outside, ".agents")));
+const helper = path.join(profile, ".agents/skills/whodunit/scripts/triage.mjs");
+// Must work outside type:module projects, including the minimum Node 22.0 release.
+const help = execFileSync(process.execPath, [helper, "--help"], {
+  cwd: outside,
+  encoding: "utf8",
+});
+assert.ok(help.length > 0);
+console.log(
+  "User-wide discovery paths and standalone helper module loading passed.",
+);

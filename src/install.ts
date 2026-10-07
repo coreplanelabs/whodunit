@@ -14,6 +14,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 
 const owner = "@coreplane/whodunit",
   receiptName = ".local-debug-install.json";
+export type InstallScope = "user" | "project";
 export type InstallAgent = "all" | "codex" | "claude" | "opencode";
 export interface InstallReceipt {
   owner: string;
@@ -22,12 +23,19 @@ export interface InstallReceipt {
 }
 const digest = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
-export function targetPaths(agent: InstallAgent): string[] {
-  return agent === "claude"
-    ? [".claude/skills/whodunit"]
-    : agent === "all"
-      ? [".agents/skills/whodunit", ".claude/skills/whodunit"]
-      : [".agents/skills/whodunit"];
+export function targetPaths(
+  agent: InstallAgent,
+  scope: InstallScope = "project",
+): string[] {
+  const paths = {
+    codex: ".agents/skills/whodunit",
+    claude: ".claude/skills/whodunit",
+    opencode:
+      scope === "user"
+        ? ".config/opencode/skills/whodunit"
+        : ".opencode/skills/whodunit",
+  };
+  return agent === "all" ? Object.values(paths) : [paths[agent]];
 }
 export function validateOwned(
   receipt: unknown,
@@ -80,7 +88,9 @@ function fileNames(directory: string, prefix = ""): string[] {
 function safeParents(root: string, path: string): void {
   const rel = relative(root, path);
   if (rel.startsWith("..") || rel.startsWith(sep))
-    throw Error("Install paths must stay inside the selected project.");
+    throw Error(
+      "Install paths must stay inside the selected install directory.",
+    );
   let current = root;
   for (const part of rel.split(sep)) {
     current = join(current, part);
@@ -88,7 +98,7 @@ function safeParents(root: string, path: string): void {
       const stat = lstatSync(current);
       if (stat.isSymbolicLink() || !stat.isDirectory())
         throw Error(
-          "An install path is a symlink or non-directory; choose a project-local directory.",
+          "An install path is a symlink or non-directory; choose a regular directory.",
         );
     }
   }
@@ -98,6 +108,7 @@ export function installSkill(
   source: string,
   version: string,
   agent: InstallAgent = "all",
+  scope: InstallScope = "project",
 ) {
   const root = realpathSync(resolve(project)),
     sourceFiles = files(source);
@@ -106,7 +117,7 @@ export function installSkill(
   const hashes = Object.fromEntries(
     [...sourceFiles].map(([name, bytes]) => [name, digest(bytes)]),
   );
-  const targets = targetPaths(agent).map((path) => join(root, path));
+  const targets = targetPaths(agent, scope).map((path) => join(root, path));
   const pending: string[] = [];
   for (const target of targets) {
     safeParents(root, target);

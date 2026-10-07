@@ -1,5 +1,5 @@
 {
-  "name": "@coreplane/whodunit",
+  "name": "whodunit-development",
   "version": "0.1.0",
   "description": "Trace local failures through code, relevant history and agent context.",
   "type": "module",
@@ -7,22 +7,8 @@
   "engines": {
     "node": ">=22"
   },
-  "bin": {
-    "whodunit": "bin/whodunit.mjs"
-  },
-  "exports": {
-    ".": {
-      "types": "./skill/whodunit/scripts/lib/index.d.ts",
-      "import": "./skill/whodunit/scripts/lib/index.js"
-    }
-  },
-  "files": [
-    "bin",
-    "skill/whodunit",
-    "README.md"
-  ],
   "scripts": {
-    "build": "tsgo -p tsconfig.build.json",
+    "build": "node scripts/build-report-assets.mjs && tsgo -p tsconfig.build.json",
     "typecheck": "tsgo -p tsconfig.json --noEmit",
     "test": "bun test --isolate",
     "verify": "npm run lint && npm run typecheck && npm run build && npm run test && npm run check:site && node scripts/check-package.mjs",
@@ -42,8 +28,5 @@
     "url": "git+https://github.com/coreplanelabs/whodunit.git"
   },
   "homepage": "https://debug.polycorp.foo",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org"
-  }
+  "private": true
 }

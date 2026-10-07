@@ -383,3 +383,22 @@ test("terminal delivery saves the graph and prints a bounded summary without lea
   expect(out).toBe("");
   expect(errors).not.toContain("private overwrite detail");
 });
+
+test("code sources preserve provenance, escape markup and load fonts without a network", () => {
+  const f = fixture();
+  const source = {
+    ...f.sources[0]!,
+    format: "code",
+    excerpt: '<script>throw "bad"</script>\nnext line',
+  };
+  const input = { ...f, sources: [source] };
+  const html = renderDebugCard(input);
+  expect(html).toContain('<pre class="dc-code"><code>&lt;script&gt;');
+  expect(html).not.toContain("<script>throw");
+  expect(parseDebugCard(input).sources[0]!.origin).toBe("provided_answer");
+  expect(renderDebugDocument(input)).toContain("font-src data:");
+  expect(html).not.toContain('url("https:');
+  expect(() =>
+    parseDebugCard({ ...input, sources: [{ ...source, format: "html" }] }),
+  ).toThrow("source format");
+});

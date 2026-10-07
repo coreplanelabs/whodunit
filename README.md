@@ -6,19 +6,15 @@ Whodunit is a debugging skill for coding agents. It connects a problem to local 
 
 ## Install
 
-Run inside your project:
+Run from any directory:
 
 ```sh
 npx @coreplane/whodunit
 ```
 
-To install directly from GitHub instead:
+The installer registers Whodunit in your user skill folders for Codex, Claude Code and OpenCode, across all your projects. Restart your coding agent after installing. It preserves edited or unrelated skill files and leaves project dependencies alone.
 
-```sh
-npx github:coreplanelabs/whodunit
-```
-
-The installer registers the skill for Codex, Claude Code and OpenCode. It leaves your project dependencies alone and preserves edited or unrelated skill files. To target one client, add `--agent codex`, `--agent claude`, or `--agent opencode`. If a running client caches skills, start a new chat.
+To target one client, add `--agent codex`, `--agent claude`, or `--agent opencode`. For a project-only install, use `--root /path/to/project`. `--home /path/to/home` selects a different user profile.
 
 ## Use
 
@@ -28,7 +24,7 @@ Ask your agent what went wrong, or invoke the skill directly:
 /whodunit Investigate why login stopped working.
 ```
 
-Claude Code and OpenCode use `/whodunit`; Codex supports `$whodunit`. Give the actual symptom or error. You do not need to tell the agent to read a skill-file path.
+Claude Code uses `/whodunit`; Codex supports `$whodunit`. In any supported client, you can ask: “Use Whodunit to investigate why login stopped working.” Give the actual symptom or error. You do not need to tell the agent to read a skill-file path.
 
 Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves the report in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report; suggested next steps are optional.
 
@@ -49,6 +45,7 @@ Use Node 22+ and Bun 1.4.2:
 bun install --frozen-lockfile
 bun run verify
 node scripts/install-smoke.mjs
+node scripts/npx-smoke.mjs
 ```
 
 CI checks lint, types, offline tests, generated-code parity, real installation, the package allowlist and the website build on Node 22 and 24. The release workflow supports candidate preparation and npm publication with provenance once its trusted-publisher binding is configured. See [Contributing](CONTRIBUTING.md), [Security](SECURITY.md) and [Releasing](RELEASING.md).

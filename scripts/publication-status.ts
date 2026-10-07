@@ -28,8 +28,10 @@ export function alreadyPublished(
 }
 
 if (import.meta.main) {
-  const manifest = JSON.parse(readFileSync("package.json", "utf8")),
-    pack = JSON.parse(readFileSync(".cache/verified-package.json", "utf8"));
+  const manifest = JSON.parse(readFileSync("package.manifest.json", "utf8")),
+    pack = JSON.parse(
+      readFileSync(".cache/verified-package.manifest.json", "utf8"),
+    );
   if (pack.name !== manifest.name || pack.version !== manifest.version)
     throw Error("Verified package identity differs from the release");
   const integrity = `sha512-${createHash("sha512").update(readFileSync(pack.filename)).digest("base64")}`;

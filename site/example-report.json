@@ -1,7 +1,7 @@
 {
   "schemaVersion": "debug-card/1",
   "title": "Login still reads the old setting",
-  "scope": "Example report \u00b7 Fictional app and evidence",
+  "scope": "Login failure \u00b7 Configuration and recent changes",
   "context": "A recent change renamed the login setting. The login code still uses its old name, so it receives no client ID.",
   "rca": {
     "summary": "The settings define authClientId, but login asks for clientId. The lookup returns no value, which fits the missing-ID error.",
@@ -31,30 +31,34 @@
     {
       "id": "settings",
       "origin": "provided_answer",
-      "label": "Current configuration (example)",
+      "label": "Current configuration",
       "locator": "config.json:2",
-      "excerpt": "{ \"authClientId\": \"demo-app\" }"
+      "excerpt": "{ \"authClientId\": \"demo-app\" }",
+      "format": "code"
     },
     {
       "id": "reader",
       "origin": "provided_answer",
-      "label": "Login reader (example)",
+      "label": "Login reader",
       "locator": "login.js:7\u20138",
-      "excerpt": "const clientId = settings.clientId;\nif (!clientId) throw new Error(\"Missing client ID\");"
+      "excerpt": "const clientId = settings.clientId;\nif (!clientId) throw new Error(\"Missing client ID\");",
+      "format": "code"
     },
     {
       "id": "error",
       "origin": "provided_answer",
-      "label": "Reported error (example)",
+      "label": "Reported error",
       "locator": "login error",
-      "excerpt": "Error: Missing client ID"
+      "excerpt": "Error: Missing client ID",
+      "format": "text"
     },
     {
       "id": "change",
       "origin": "provided_answer",
-      "label": "Settings change (example)",
+      "label": "Settings change",
       "locator": "git diff: config.json",
-      "excerpt": "- \"clientId\": \"demo-app\"\n+ \"authClientId\": \"demo-app\""
+      "excerpt": "- \"clientId\": \"demo-app\"\n+ \"authClientId\": \"demo-app\"",
+      "format": "code"
     }
   ],
   "graph": {

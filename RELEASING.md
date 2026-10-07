@@ -2,7 +2,7 @@
 
 CI checks lint, types, builds, offline tests, generated-file parity, installation and the npm allowlist on Node 22 and 24.
 
-1. Update package.json, rebuild, run bun run verify, and commit generated files.
+1. Update package.manifest.json, rebuild, run bun run verify, and commit generated files.
 2. Create a tag matching the package version, such as v0.1.0.
 3. Publish its GitHub release. release.yml verifies that exact tag and publishes the checked tarball with npm provenance.
 

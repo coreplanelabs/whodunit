@@ -37,6 +37,7 @@ export interface DebugCard {
         label: string;
         locator: string;
         excerpt: string;
+        format?: "code" | "text";
     }[];
 }
 export declare function parseDebugCard(value: unknown): DebugCard;
