@@ -250,7 +250,7 @@ export function renderDebugCard(input) {
             .join("")}</details>`
         : "";
     const outcomes = {
-        supports: "Fits the evidence",
+        supports: "",
         contradicts: "Evidence against",
         unresolved: "Unresolved",
     };
@@ -268,7 +268,7 @@ export function renderDebugCard(input) {
             : []),
     ];
     const checks = checkRows.length
-        ? `<h3 class="dc-check-heading">What we checked</h3><table class="dc-checks"><thead><tr><th>Check</th><th>Evidence</th></tr></thead><tbody>${checkRows.map((c) => `<tr><td><strong>${e(c.explanation)}</strong><p class="dc-verdict">${e(outcomes[c.outcome])}</p></td><td>${e(c.evidence)}${sourceDetails(c.sourceIds)}</td></tr>`).join("")}</tbody></table>`
+        ? `<h3 class="dc-check-heading">What we checked</h3><table class="dc-checks"><thead><tr><th>Check</th><th>Evidence</th></tr></thead><tbody>${checkRows.map((c) => `<tr><td><strong>${e(c.explanation)}</strong>${outcomes[c.outcome] ? `<p class="dc-verdict">${e(outcomes[c.outcome])}</p>` : ""}</td><td>${e(c.evidence)}${sourceDetails(c.sourceIds)}</td></tr>`).join("")}</tbody></table>`
         : "";
     const graphHtml = card.graph
         ? renderGraph(card.graph, root, sourceDetails)
@@ -304,7 +304,7 @@ export function renderDebugText(input) {
         .join("\n");
     const refs = card.sources.map((s) => `- ${s.label}: ${s.locator}`).join("\n");
     const outcomes = {
-        supports: "fits the evidence",
+        supports: "",
         contradicts: "evidence against",
         unresolved: "unresolved",
     };
@@ -321,7 +321,7 @@ export function renderDebugText(input) {
             : []),
     ];
     const checks = checkRows.length
-        ? `\n\nWhat we checked:\n${checkRows.map((c) => `- ${c.explanation}: ${c.evidence} [${outcomes[c.outcome]}]`).join("\n")}\n`
+        ? `\n\nWhat we checked:\n${checkRows.map((c) => `- ${c.explanation}: ${c.evidence}${outcomes[c.outcome] ? ` [${outcomes[c.outcome]}]` : ""}`).join("\n")}\n`
         : "\n";
     const analysis = card.rca
         ? `${card.rca.assurance === "unknown" ? "Cause not established" : card.rca.assurance === "hypothesis" ? "Possible root cause" : "Root cause"}: ${card.rca.summary}${checks}${card.rca.gaps ? `\nStill unknown:\n${card.rca.gaps.map((g) => `- ${g}`).join("\n")}\n` : ""}`
