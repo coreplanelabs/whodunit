@@ -1,57 +1,57 @@
 export interface DebugGraph {
-	title: string;
-	focusId?: string;
-	nodes: {
-		id: string;
-		label: string;
-		detail: string;
-		column: number;
-		sourceIds: string[];
-		assurance: "observed" | "reported" | "hypothesis" | "unknown";
-	}[];
-	edges: {
-		from: string;
-		to: string;
-		kind: "causes" | "supports" | "contradicts";
-	}[];
+  title: string;
+  focusId?: string;
+  nodes: {
+    id: string;
+    label: string;
+    detail: string;
+    column: number;
+    sourceIds: string[];
+    assurance: "observed" | "reported" | "hypothesis" | "unknown";
+  }[];
+  edges: {
+    from: string;
+    to: string;
+    kind: "causes" | "supports" | "contradicts";
+  }[];
 }
 const escapeHtml = (text: string) =>
-	text
-		.replaceAll("&", "&amp;")
-		.replaceAll("<", "&lt;")
-		.replaceAll(">", "&gt;")
-		.replaceAll('"', "&quot;")
-		.replaceAll("'", "&#39;");
+  text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 
 export function renderGraph(
-	graph: DebugGraph,
-	root: string,
-	sources: (ids: string[]) => string,
+  graph: DebugGraph,
+  root: string,
+  sources: (ids: string[]) => string,
 ): string {
-	const selected = graph.focusId ?? graph.nodes[0]!.id;
-	const columns = [...new Set(graph.nodes.map((n) => n.column))].sort(
-		(a, b) => a - b,
-	);
-	const groups = columns
-		.map(
-			(column) =>
-				`<div class="dg-column">${graph.nodes
-					.filter((n) => n.column === column)
-					.map(
-						(n) =>
-							`<button type="button" class="dg-node" data-node="${n.id}" aria-pressed="${n.id === selected}" aria-controls="${root}-source-${n.id}"><span>${escapeHtml(n.label)}</span></button>`,
-					)
-					.join("")}</div>`,
-		)
-		.join("");
-	const panels = graph.nodes
-		.map(
-			(n) =>
-				`<div id="${root}-source-${n.id}" data-panel="${n.id}"${n.id === selected ? "" : " hidden"}><p>${escapeHtml(n.detail)}</p>${sources(n.sourceIds)}</div>`,
-		)
-		.join("");
-	const data = JSON.stringify(graph.edges).replaceAll("<", "\\u003c");
-	return `<div class="dg-report" aria-label="${escapeHtml(graph.title)}">
+  const selected = graph.focusId ?? graph.nodes[0]!.id;
+  const columns = [...new Set(graph.nodes.map((n) => n.column))].sort(
+    (a, b) => a - b,
+  );
+  const groups = columns
+    .map(
+      (column) =>
+        `<div class="dg-column">${graph.nodes
+          .filter((n) => n.column === column)
+          .map(
+            (n) =>
+              `<button type="button" class="dg-node" data-node="${n.id}" aria-pressed="${n.id === selected}" aria-controls="${root}-source-${n.id}"><span>${escapeHtml(n.label)}</span></button>`,
+          )
+          .join("")}</div>`,
+    )
+    .join("");
+  const panels = graph.nodes
+    .map(
+      (n) =>
+        `<div id="${root}-source-${n.id}" data-panel="${n.id}"${n.id === selected ? "" : " hidden"}><p>${escapeHtml(n.detail)}</p>${sources(n.sourceIds)}</div>`,
+    )
+    .join("");
+  const data = JSON.stringify(graph.edges).replaceAll("<", "\\u003c");
+  return `<div class="dg-report" aria-label="${escapeHtml(graph.title)}">
 <h3>${escapeHtml(graph.title)}</h3>
 <div class="dg-legend"><span><i class="dg-cause"></i>Failure path</span>${graph.edges.some((edge) => edge.kind === "supports") ? '<span><i class="dg-support"></i>Supporting evidence</span>' : ""}${graph.edges.some((edge) => edge.kind === "contradicts") ? '<span><i class="dg-against"></i>Evidence against</span>' : ""}</div>
 <div class="dg-map" style="--dg-columns:${columns.length}"><svg class="dg-links" aria-hidden="true"><defs><marker id="${root}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/></marker></defs><g class="dg-paths"></g></svg><div class="dg-grid">${groups}</div></div>

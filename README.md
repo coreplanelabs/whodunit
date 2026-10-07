@@ -1,19 +1,56 @@
-# What did I mess up?
+# Whodunit
 
-A local debugging skill for coding agents. Connect a failure to relevant files, changes and available history, then explain the supported cause in a concise report.
+**Find the change behind the failure.**
 
-From your project:
+Whodunit is a debugging skill for coding agents. It connects a problem to local code, relevant changes and available agent history, then explains the supported cause with evidence.
+
+## Install
+
+Run inside your project:
+
+```sh
+npx github:coreplanelabs/whodunit
+```
+
+The first npm release is pending publication. After it is published, the registry command is:
 
 ```sh
 npx @coreplane/whodunit
 ```
 
-Then ask your coding agent what went wrong. The installer registers the skill for automatic discovery in Codex, Claude Code and OpenCode. If an already-running client caches skills, start a new chat; you do not need to give it a skill-file path.
+The installer registers the skill for Codex, Claude Code and OpenCode. It leaves your project dependencies alone and preserves edited or unrelated skill files. To target one client, add `--agent codex`, `--agent claude`, or `--agent opencode`. If a running client caches skills, start a new chat.
 
-Reports keep the explanation and sources together. A selectable graph can show the failure path and evidence against it. Terminal clients receive the same facts as text. Suggestions are optional; fixes are not promised. A small footer links to Polylane for production fixes and prevention.
+## Use
 
-Node 22+. The bounded Git helpers require a committed Git repository; the agent can use its normal file tools otherwise. History and session access depend on the client's actual tools. This package does not install a session bridge, message agents, run fixes, or upload your repository. Common credential redaction is incomplete.
+Ask your agent what went wrong, or invoke the skill directly:
+
+```text
+/whodunit Investigate why login stopped working.
+```
+
+Claude Code and OpenCode use `/whodunit`; Codex supports `$whodunit`. Give the actual symptom or error. You do not need to tell the agent to read a skill-file path.
+
+Supported visual clients get a concise report with selectable graph nodes and sources. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report; suggested next steps are optional.
+
+## Scope
+
+- Node 22+. The Git helpers require a committed repository; the agent can use its own file tools otherwise.
+- Local context and targeted history collection each use a five-second budget with explicit path, revision and excerpt bounds.
+- Memory and session access depend on the client's actual tools. No cross-client session bridge is installed.
+- The helper does not run fixes, message agents or upload the repository. The agent's configured inference provider still governs its context. Common secret redaction is incomplete.
 
 This is experimental. A small prior synthetic comparison did not establish better diagnosis than ordinary Codex.
 
-Development: `bun install`, `bun run verify`. Unit tests use injected I/O; real installation and browser checks run separately.
+## Development
+
+Use Node 22+ and Bun 1.4.2:
+
+```sh
+bun install --frozen-lockfile
+bun run verify
+node scripts/install-smoke.mjs
+```
+
+CI checks lint, types, offline tests, generated-code parity, real installation and the package allowlist on Node 22 and 24. The release workflow supports candidate preparation and npm publication with provenance once its trusted-publisher binding is configured. See [Contributing](CONTRIBUTING.md), [Security](SECURITY.md) and [Releasing](RELEASING.md).
+
+MIT licensed. For production fixes and prevention, [try Polylane](https://polylane.com/?utm_source=whodunit&utm_medium=readme).
