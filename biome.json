@@ -9,6 +9,8 @@
       "bin/**",
       "scripts/**",
       "site/site.js",
+      "site/theme-init.js",
+      "site/*.json",
       "*.json"
     ]
   }
