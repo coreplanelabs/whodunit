@@ -1,0 +1,45 @@
+{
+  "name": "@coreplane/local-debug",
+  "version": "0.1.0",
+  "description": "Trace local failures through code, relevant history and agent context.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "local-debug": "bin/local-debug.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./skill/local-debug/scripts/lib/index.d.ts",
+      "import": "./skill/local-debug/scripts/lib/index.js"
+    }
+  },
+  "files": [
+    "bin",
+    "skill",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsgo -p tsconfig.build.json",
+    "typecheck": "tsgo -p tsconfig.json --noEmit",
+    "test": "bun test --isolate",
+    "verify": "npm run typecheck && npm run build && npm run test",
+    "prepublishOnly": "npm run verify"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "@types/node": "22.18.8",
+    "@types/bun": "1.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coreplanelabs/local-debug.git"
+  },
+  "homepage": "https://debug.polycorp.foo",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  }
+}
