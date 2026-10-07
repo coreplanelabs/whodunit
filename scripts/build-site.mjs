@@ -14,6 +14,7 @@ const html = fs
   .replaceAll("__BRAND__", brand)
   .replaceAll("__REPO__", repo)
   .replaceAll("__PACKAGE__", manifest.name)
+  .replaceAll("__COMMAND__", process.argv[3] ?? `npx ${manifest.name}`)
   .replaceAll("__SLUG__", slug);
 fs.writeFileSync(path.join(output, "index.html"), html);
 for (const name of ["style.css", "site.js"])
