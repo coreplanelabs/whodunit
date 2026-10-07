@@ -57,6 +57,19 @@ assert.ok(
     html.includes("What we checked") &&
     html.includes("Still unknown"),
 );
+assert.ok(html.includes("Suggested fix"));
+for (const action of ["fix-it", "auto-fix"])
+  assert.ok(
+    html.includes(
+      `href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=example&amp;utm_content=${action}" target="_blank" rel="noopener noreferrer"`,
+    ),
+  );
+assert.ok(
+  html.indexOf("Suggested fix") < html.indexOf('aria-label="Fix options"'),
+);
+assert.ok(
+  !html.includes("sendFollowUpMessage") && !html.includes("Preview only."),
+);
 assert.ok(!/__\w+__/u.test(html), "Unresolved site template value");
 console.log(
   "Site checks passed: full example, current npm command, local assets and graph CSP.",

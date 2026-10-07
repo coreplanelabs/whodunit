@@ -17,3 +17,5 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.brand-icon{transition:none}}
 
 .site-footer>span>a{display:inline-flex;align-items:center;gap:4px}.site-footer .external-icon{width:12px;height:12px;margin-left:0;vertical-align:baseline}
+
+#example .dc-actions{border-top:1px solid var(--dc-line);padding-top:18px;margin-top:12px}#example .dc-action-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#example .dc-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:600 13px/1.3 "Whodunit DM Sans",sans-serif;min-height:44px;padding:10px 16px;border:1px solid var(--dc-line);border-radius:8px;color:var(--dc-fg);background:var(--dc-bg)}#example .dc-action-primary{background:var(--brand-green);border-color:transparent;color:#131416}#example .dc-action:hover{filter:brightness(.95)}#example .dc-action-primary:hover{color:#131416}@media(max-width:500px){#example .dc-action-row{display:grid;grid-template-columns:1fr}#example .dc-action{width:100%;font-size:14px}}
