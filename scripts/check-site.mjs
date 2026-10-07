@@ -39,7 +39,7 @@ for (const route of ["/", "/index", "/index.html"]) {
   assert.ok(matched[0].includes("frame-ancestors 'none'"));
 }
 const index = fs.readFileSync(`${root}/index.html`, "utf8");
-assert.ok(index.includes("npx github:coreplanelabs/whodunit"));
+assert.ok(index.includes("npx @coreplane/whodunit"));
 assert.ok(!/__\w+__/u.test(index), "Unresolved site template value");
 console.log(
   "Site checks passed: curated assets and compatible graph policies.",
