@@ -26,7 +26,19 @@ Ask your agent what went wrong, or invoke the skill directly:
 
 Claude Code uses `/whodunit`; Codex supports `$whodunit`. In any supported client, you can ask: “Use Whodunit to investigate why login stopped working.” Give the actual symptom or error. You do not need to tell the agent to read a skill-file path.
 
-Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves the report in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report; suggested next steps are optional.
+Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves the report in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report. A short suggested fix appears above the controls. In Codex, **Fix it** sends a request to your agent. Saved browser reports have no fix controls. The terminal asks whether you want a fix.
+
+## Auto-fix
+
+Whodunit asks before fixing by default. To save a choice for future uses:
+
+```sh
+npx @coreplane/whodunit settings auto-fix on
+npx @coreplane/whodunit settings auto-fix off
+npx @coreplane/whodunit settings show
+```
+
+The choice is stored in `~/.coreplanelabs/whodunit/settings.json`. The report helper reads it. The skill asks your agent to read it before editing. Auto-fix asks the agent to try local code changes and relevant tests when the cause is supported. The agent may need more evidence or permission. “Report only” stops edits for the current use. Publishing, deployment, credentials, other agents and existing approval gates keep their normal boundaries.
 
 ## Scope
 

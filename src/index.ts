@@ -1,3 +1,4 @@
+export type { ReportOptions } from "./actions.js";
 export {
   type DebugCard,
   parseDebugCard,
@@ -14,3 +15,9 @@ export {
   type LocalIo,
   type LocalOptions,
 } from "./local.js";
+export {
+  type Preferences,
+  type PreferencesSnapshot,
+  readPreferences,
+  writePreferences,
+} from "./preferences.js";

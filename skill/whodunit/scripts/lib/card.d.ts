@@ -1,3 +1,4 @@
+import { type ReportOptions } from "./actions.js";
 import { type DebugGraph } from "./graph.js";
 type Assurance = "observed" | "reported" | "hypothesis" | "unknown";
 export interface DebugCard {
@@ -6,7 +7,13 @@ export interface DebugCard {
     scope: string;
     context?: string;
     nextCheck?: string;
+    suggestedFix?: string;
     graph?: DebugGraph;
+    repair?: {
+        status: "changed" | "blocked";
+        summary: string;
+        sourceIds: string[];
+    };
     rca?: {
         summary: string;
         assurance: Assurance;
@@ -41,8 +48,8 @@ export interface DebugCard {
     }[];
 }
 export declare function parseDebugCard(value: unknown): DebugCard;
-export declare function renderDebugCard(input: unknown): string;
-export declare function renderDebugText(input: unknown): string;
-export declare function renderDebugDocument(input: unknown): string;
-export declare function renderTerminalSummary(input: unknown, reportPath: string): string;
+export declare function renderDebugCard(input: unknown, options?: ReportOptions): string;
+export declare function renderDebugText(input: unknown, options?: ReportOptions): string;
+export declare function renderDebugDocument(input: unknown, options?: ReportOptions): string;
+export declare function renderTerminalSummary(input: unknown, reportPath: string, options?: ReportOptions): string;
 export {};

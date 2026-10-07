@@ -34,7 +34,7 @@ assert.ok(headers.includes("font-src 'self'"));
 assert.ok(headers.includes("frame-ancestors 'none'"));
 assert.ok(!headers.includes("script-src 'unsafe-inline'"));
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/gu)];
-assert.equal(scripts.length, 1);
+assert.ok(scripts.length >= 1, "Expected report interactions");
 for (const match of scripts) {
   const hash = createHash("sha256").update(match[1]).digest("base64");
   assert.ok(

@@ -1,6 +1,6 @@
 {
   "name": "@coreplane/whodunit",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Trace local failures through code, relevant history and agent context.",
   "type": "module",
   "license": "MIT",
