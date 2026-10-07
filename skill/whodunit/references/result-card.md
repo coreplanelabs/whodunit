@@ -1,6 +1,6 @@
 # A concise report in any client
 
-Make the report self-contained. Put two plain-language sentences of context inside it, followed by a visible root cause or missing evidence, an evidence comparison when useful, change-history evidence within the same checks, and material unknowns. Do not hide the causal explanation in a disclosure or repeat the summary above the report. Suggested checks are optional. Do not promise a fix, fresh runtime verification or agent ownership from source inspection.
+Make the report self-contained. Put two plain-language sentences of context inside it, followed by a visible root cause or missing evidence, an evidence comparison when useful, change-history evidence within the same checks, and material unknowns. Do not hide the causal explanation in a disclosure or repeat the summary above the report. Suggested checks are optional. Offer a local fix through the report controls. Follow [the fix flow](fixing.md). Do not promise recovery or agent ownership from source inspection.
 
 ## Choose the display by client capability
 
@@ -25,7 +25,7 @@ node <skill-directory>/scripts/triage.mjs card /absolute/report.json --inline
 
 The inline command writes a fragment and prints only Codex's supported reference. Its output folder comes from `CODEX_THREAD_ID` and `CODEX_HOME` (default `~/.codex`); the date is the thread's creation date, not today's date. It rejects missing or invalid thread context, symlinked directories and oversized fragments before returning a reference. Never use an arbitrary worklog or repository path in a Codex inline reference: Codex may reject it with `Invalid visualization read request` even when the HTML is valid. Keep the input JSON wherever the task permits; let the helper choose the display file's path.
 
-If Codex host context is unavailable, use the saved browser-report or text route. Other inline clients may use `--format fragment` with their own verified destination. Codex references are not portable to a terminal or another client. The standalone report has no remote resources or host APIs. Optional graph interaction uses a locally generated script permitted by its exact CSP hash.
+If Codex host context is unavailable, use the saved browser-report or text route. Other inline clients may use `--format fragment` with their own verified destination. Codex references are not portable to a terminal or another client. The standalone report has no remote resources. Saved reports have no fix controls; the agent asks in the terminal. Codex inline buttons send requests through the supported host confirmation flow. Hide the buttons when the client has no supported host action, and ask in the conversation. The graph and inline buttons use local scripts permitted by their exact CSP hashes.
 
 Illustrative record; this is not evidence about a user's repository:
 
@@ -58,9 +58,11 @@ Illustrative record; this is not evidence about a user's repository:
 }
 ```
 
+Optional `suggestedFix` is at most 240 characters. Use one plain sentence to describe the proposed change and its check. It appears above the fix controls and in terminal output. Keep it optional when the cause is unknown. Do not show a large patch or promise the fix will work. Completed repairs use `repair` instead.
+
 `rca.summary` is at most 400 characters. Assurance uses `observed`, `reported`, `hypothesis` or `unknown`; observed RCA and findings require direct-read sources. Optional `checks` contains up to 4 items with an explanation (100), evidence (260), outcome (`supports`, `contradicts`, `unresolved`) and existing source IDs. Only unresolved checks may have no source IDs. Outcomes are investigation judgments, not verification performed by the renderer. Optional `history` contains a summary (400) and existing source IDs; the renderer folds it into the "Which change introduced this?" check. Use this field for a supported change-history finding so the terminal summary can retain it. Optional `gaps` contains 1–3 unknowns (200 each). Missing history or attribution belongs in gaps.
 
-Source origins are `direct_read`, `provided_answer`, `session_statement`, `user_input`. Supplied answers and session statements remain reported. The renderer validates structure, not truth. Context (600) and source excerpts (600) permit normal line breaks/tabs; labels and locators stay on one line. Use optional `format: "code"` for code, diffs or structured configuration excerpts; otherwise sources render as prose. Locators remain inert text. Common secret redaction is incomplete: review evidence before displaying it. No formatter investigates, contacts agents, runs checks or authorizes fixes.
+Source origins are `direct_read`, `provided_answer`, `session_statement`, `user_input`. Supplied answers and session statements remain reported. The renderer validates structure, not truth. Context (600) and source excerpts (600) permit normal line breaks/tabs; labels and locators stay on one line. Use optional `format: "code"` for code, diffs or structured configuration excerpts; otherwise sources render as prose. Locators remain inert text. Common secret redaction is incomplete: review evidence before displaying it. The formatter does not investigate or run fixes. Inline button requests go to the user's agent through the supported host confirmation flow.
 
 ## Evaluate usefulness honestly
 
@@ -84,4 +86,6 @@ For terminal delivery, create a task-owned report directory first, then run:
 node <skill-directory>/scripts/triage.mjs card /absolute/report.json --output /absolute/new-report.html
 ```
 
-The helper creates a new HTML file, prints a short summary and its path, and refuses to overwrite an existing file. Do not append a long freehand analysis or an unsolicited action question.
+The helper creates a new HTML file, prints a short summary and its path, and refuses to overwrite an existing file. Keep the printed fix question at the end. Wait for the user's reply when auto-fix is off. Do not add a long investigation transcript.
+
+Use [the writing guide](writing.md) for plain language. [Fix choices](fixing.md) describes the saved preference, client controls, and optional `repair` result.

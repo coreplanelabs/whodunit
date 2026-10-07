@@ -1,10 +1,13 @@
 import { closeSync, constants, fstatSync, openSync, readSync, writeFileSync, } from "node:fs";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
+import { createInterface } from "node:readline/promises";
+import { fixRequest } from "./actions.js";
 import { renderDebugCard, renderDebugDocument, renderDebugText, renderTerminalSummary, } from "./card.js";
 import { InputError } from "./errors.js";
 import { saveCodexInline } from "./inline.js";
 import { collectLocal, collectLocalHistory, validateErrorFile, } from "./local.js";
+import { readPreferences, writePreferences, } from "./preferences.js";
 import { hasControlCharacters } from "./validation.js";
 const MAX_INPUT_BYTES = 4 * 1024 * 1024;
 const parseJson = (text) => {
@@ -17,9 +20,29 @@ const parseJson = (text) => {
         throw new InputError("Provide valid JSON.");
     }
 };
-export function nativeCliIo() {
+export function nativeCliIo(preferencesHome = homedir()) {
     return {
         read: readBounded,
+        ...(process.stdin.isTTY && process.stdout.isTTY
+            ? {
+                ask: async (question) => {
+                    const terminal = createInterface({
+                        input: process.stdin,
+                        output: process.stdout,
+                    });
+                    try {
+                        return await terminal.question(question);
+                    }
+                    finally {
+                        terminal.close();
+                    }
+                },
+            }
+            : {}),
+        preferences: {
+            read: (home) => readPreferences(home ?? preferencesHome),
+            write: (value, home) => writePreferences(value, home ?? preferencesHome),
+        },
         write: (path, text) => writeFileSync(path, text, { flag: "wx" }),
         inline: (fragment) => saveCodexInline(fragment, process.env.CODEX_THREAD_ID, process.env.CODEX_HOME ?? resolve(homedir(), ".codex")),
         out: (text) => process.stdout.write(text),
@@ -58,9 +81,89 @@ export function readBounded(path, io = fileIo) {
 }
 export async function dispatchCli(args, io, _env = {}, _dependencies = {}, localIo) {
     if (args.length === 1 && args[0] === "--help") {
-        io.out("whodunit local --help\nwhodunit history --help\nwhodunit card --help\n");
+        io.out("whodunit local --help\nwhodunit history --help\nwhodunit card --help\nwhodunit settings --help\n");
         return 0;
     }
+    if (args[0] === "settings") {
+        const usage = "whodunit settings [show | auto-fix on | auto-fix off] [--home DIRECTORY]\nSave your choice for future Whodunit uses. Your agent may ask if evidence or permission is missing.\n";
+        if (args[1] === "--help") {
+            io.out(usage);
+            return 0;
+        }
+        try {
+            if (!io.preferences)
+                throw new InputError("This client cannot read or save Whodunit settings.");
+            const remaining = args.slice(1);
+            const index = remaining.indexOf("--home");
+            let home;
+            if (index !== -1) {
+                home = remaining[index + 1];
+                if (!home || hasControlCharacters(home) || home.startsWith("-"))
+                    throw new InputError("Choose a valid home folder.");
+                remaining.splice(index, 2);
+            }
+            const showing = remaining.length === 0 ||
+                (remaining.length === 1 && remaining[0] === "show");
+            if (!showing &&
+                !(remaining.length === 2 &&
+                    remaining[0] === "auto-fix" &&
+                    ["on", "off"].includes(remaining[1])))
+                throw new InputError(usage.trim());
+            const result = showing
+                ? io.preferences.read(home)
+                : io.preferences.write(remaining[1] === "on", home);
+            io.out(JSON.stringify(result, null, 2) + "\n");
+            return 0;
+        }
+        catch (error) {
+            io.error((error instanceof InputError
+                ? error.message
+                : "Cannot read or save Whodunit settings.") + "\n");
+            return 1;
+        }
+    }
+    const reportOptions = (input, delivery) => {
+        if (hasControlCharacters(input))
+            throw new InputError("Choose a valid local report path.");
+        let autoFix = false;
+        let settingsUnavailable = false;
+        try {
+            autoFix = io.preferences?.read().autoFix ?? false;
+        }
+        catch {
+            autoFix = false;
+            settingsUnavailable = true;
+        }
+        return {
+            reportPath: resolve(input),
+            delivery,
+            autoFix,
+            settingsUnavailable,
+            interactive: !!io.ask,
+        };
+    };
+    const askForFix = async (options) => {
+        if (!io.ask)
+            return;
+        const reply = (await io.ask("Create a fix request for your coding agent? [yes/no/always] "))
+            .trim()
+            .toLowerCase();
+        if (["", "no", "n"].includes(reply))
+            return;
+        if (!["yes", "y", "always"].includes(reply)) {
+            io.out("No request created. Choose yes, no, or always next time.\n");
+            return;
+        }
+        if (reply === "always") {
+            if (!io.preferences)
+                throw new InputError("This client cannot save auto-fix. Use your coding agent to save the choice.");
+            io.preferences.write(true);
+            if (!io.preferences.read().autoFix)
+                throw new InputError("The auto-fix choice was not saved.");
+            io.out("Auto-fix is saved for future Whodunit uses.\n");
+        }
+        io.out(`\nCopy this request into your coding agent:\n${fixRequest(options)}\n`);
+    };
     if (args[0] === "history") {
         const usage = "whodunit history --repo PATH --path FILE [--search LITERAL]\nRead up to three relevant local Git changes; no inference, network or session messages.\n";
         if (args.length === 2 && args[1] === "--help") {
@@ -103,7 +206,7 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
                     throw new InputError("Choose a report JSON file.");
                 if (!io.inline)
                     throw new InputError("This client cannot save a Codex inline report. Use --output for a browser report.");
-                const fragment = renderDebugCard(parseJson(io.read(args[1])));
+                const fragment = renderDebugCard(parseJson(io.read(args[1])), reportOptions(args[1], "inline"));
                 const path = io.inline(fragment);
                 io.out(`visualize${JSON.stringify({ path })}\n`);
                 return 0;
@@ -125,9 +228,10 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
                     throw new InputError("Choose a report JSON file.");
                 if (!io.write)
                     throw new InputError("This client cannot save a browser report.");
-                const data = parseJson(io.read(args[1])), path = resolve(target), html = renderDebugDocument(data);
+                const data = parseJson(io.read(args[1])), path = resolve(target), options = reportOptions(args[1], "browser"), html = renderDebugDocument(data, options);
                 io.write(path, html);
-                io.out(renderTerminalSummary(data, path));
+                io.out(renderTerminalSummary(data, path, options));
+                await askForFix(options);
                 return 0;
             }
             catch (error) {
@@ -147,10 +251,12 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
         try {
             const data = parseJson(io.read(args[1]));
             io.out(format === "html"
-                ? renderDebugDocument(data)
+                ? renderDebugDocument(data, reportOptions(args[1], "browser"))
                 : format === "fragment"
-                    ? renderDebugCard(data)
-                    : renderDebugText(data));
+                    ? renderDebugCard(data, reportOptions(args[1], "inline"))
+                    : renderDebugText(data, reportOptions(args[1], "browser")));
+            if (format === "text")
+                await askForFix(reportOptions(args[1], "browser"));
             return 0;
         }
         catch (error) {

@@ -13,6 +13,9 @@ fs.mkdirSync(output, { recursive: true });
 fs.rmSync(path.join(output, "example.html"), { force: true });
 const example = renderDebugCard(
   JSON.parse(fs.readFileSync("site/example-report.json", "utf8")),
+  {
+    delivery: "demo",
+  },
 );
 const scripts = [...example.matchAll(/<script>([\s\S]*?)<\/script>/gu)].map(
   (match) =>

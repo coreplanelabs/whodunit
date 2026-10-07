@@ -1,4 +1,9 @@
 import { createHash } from "node:crypto";
+import {
+  type ReportOptions,
+  renderActions,
+  terminalFixQuestion,
+} from "./actions.js";
 import { InputError } from "./errors.js";
 import { type DebugGraph, renderGraph } from "./graph.js";
 import { reportFonts } from "./report-assets.js";
@@ -11,7 +16,13 @@ export interface DebugCard {
   scope: string;
   context?: string;
   nextCheck?: string;
+  suggestedFix?: string;
   graph?: DebugGraph;
+  repair?: {
+    status: "changed" | "blocked";
+    summary: string;
+    sourceIds: string[];
+  };
   rca?: {
     summary: string;
     assurance: Assurance;
@@ -201,6 +212,25 @@ export function parseDebugCard(value: unknown): DebugCard {
           }),
     };
   }
+  let repair: DebugCard["repair"];
+  if (v.repair !== undefined) {
+    const r = obj(v.repair);
+    if (!["changed", "blocked"].includes(r.status as string))
+      fail("fix status is unsupported");
+    const sourceRefs = refs(r.sourceIds, r.status === "blocked" ? 0 : 1);
+    if (
+      r.status === "changed" &&
+      sourceRefs.some(
+        (ref) => sources.find((s) => s.id === ref)?.origin !== "direct_read",
+      )
+    )
+      fail("recorded changes require direct-read sources");
+    repair = {
+      status: r.status as "changed" | "blocked",
+      summary: str(r.summary, 400, "fix summary", true),
+      sourceIds: sourceRefs,
+    };
+  }
   let graph: DebugGraph | undefined;
   if (v.graph !== undefined) {
     const g = obj(v.graph);
@@ -270,8 +300,12 @@ export function parseDebugCard(value: unknown): DebugCard {
       ? {}
       : { context: str(v.context, 600, "report context", true) }),
     ...(v.nextCheck === undefined ? {} : { nextCheck: str(v.nextCheck, 180) }),
+    ...(v.suggestedFix === undefined
+      ? {}
+      : { suggestedFix: str(v.suggestedFix, 240, "suggested fix") }),
     ...(rca === undefined ? {} : { rca }),
     ...(graph === undefined ? {} : { graph }),
+    ...(repair === undefined ? {} : { repair }),
     findings,
     sources,
   };
@@ -285,8 +319,8 @@ const escapeHtml = (s: string) =>
     .replaceAll("'", "&#39;");
 const provenance = {
   direct_read: "Checked locally",
-  provided_answer: "Supplied evidence",
-  session_statement: "Agent statement",
+  provided_answer: "Provided",
+  session_statement: "Agent report",
   user_input: "Reported by you",
 };
 function sourceHtml(source: DebugCard["sources"][number]): string {
@@ -295,8 +329,23 @@ function sourceHtml(source: DebugCard["sources"][number]): string {
 const externalIcon =
   '<svg class="dc-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
 // Source locators stay inert. Opening a source or executing a next check requires the host/user.
-export function renderDebugCard(input: unknown): string {
+export function renderDebugCard(
+  input: unknown,
+  options: ReportOptions = {},
+): string {
   const card = parseDebugCard(input);
+  options = {
+    ...options,
+    changesRecorded: card.repair?.status === "changed",
+    context: {
+      title: card.title,
+      summary:
+        card.rca?.summary ??
+        card.findings[0]?.detail ??
+        card.context ??
+        card.title,
+    },
+  };
   const root = `debug-card-${card.findings.map((f) => f.id).join("-") || "rca"}`;
   const e = escapeHtml;
   const context = card.context ?? card.rca?.summary ?? card.findings[0]!.detail;
@@ -311,13 +360,14 @@ export function renderDebugCard(input: unknown): string {
   if (card.graph)
     for (const ref of card.graph.nodes.flatMap((n) => n.sourceIds))
       used.add(ref);
+  for (const ref of card.repair?.sourceIds ?? []) used.add(ref);
   const related = card.sources.filter((s) => !used.has(s.id));
   const relatedHtml = related.length
     ? `<details class="dc-related"><summary>Related evidence</summary>${related.map(sourceHtml).join("")}</details>`
     : "";
   const labels = {
-    observed: "Source evidence",
-    reported: "Reported note",
+    observed: "Checked sources",
+    reported: "Reported cause",
     hypothesis: "Possible explanation",
     unknown: "Not established",
   };
@@ -372,18 +422,37 @@ export function renderDebugCard(input: unknown): string {
 <style>
 ${reportFonts}
 #${root}{--dg-cause:light-dark(#146C24,#3FF35D);--dc-bg:light-dark(#FFFFFF,#1B1C1F);--dc-fg:light-dark(#131416,#FAFAFA);--dc-muted:light-dark(#56585F,#ADB0B8);--dc-line:light-dark(#E5E5E8,#35363A);--dc-soft:light-dark(#E5FAE9,#142C19);color:var(--dc-fg);background:var(--dc-bg);font:400 14px/1.55 "Whodunit DM Sans",sans-serif;padding:30px;border:1px solid var(--dc-line);border-radius:18px;box-sizing:border-box;color-scheme:inherit;box-shadow:0 12px 25px #13141608}
-#${root} *{box-sizing:border-box}#${root} h2{font-size:32px;line-height:1.2;font-weight:700;letter-spacing:-.04em;margin:8px 0 20px;max-width:720px}#${root} h3{font-size:16px;font-weight:600;margin:0}#${root} p{margin:8px 0}#${root} .dc-context{max-width:660px;white-space:pre-wrap;margin:0 0 20px}#${root} .dc-scope{color:var(--dc-muted);font:10px/1.6 "Whodunit DM Mono",monospace}#${root} .dc-line{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#${root} .dc-finding{padding:20px 0;border-top:1px solid var(--dc-line)}#${root} .dc-assurance{font-size:12px;color:var(--dc-muted);}#${root} .dc-flow{list-style:none;display:flex;margin:14px 0;padding:0;gap:8px;align-items:stretch}#${root} .dc-flow li{position:relative;background:var(--dc-soft);flex:1;padding:12px 14px;border-radius:6px;overflow-wrap:anywhere}#${root} .dc-flow li+li:before{content:'→';position:absolute;left:-9px;color:var(--dc-fg)}#${root} summary{font-size:12px;color:var(--dc-muted);min-height:32px;cursor:pointer}#${root} details[open] summary{color:var(--dc-fg)}#${root} .dc-source{padding:10px 0;border-top:1px solid var(--dc-line)}#${root} .dc-excerpt{white-space:pre-wrap;overflow-wrap:anywhere}#${root} .dc-source-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}#${root} .dc-locator{display:block;margin:4px 0 8px;font:11px/1.5 "Whodunit DM Mono",monospace;color:var(--dc-muted);overflow-wrap:anywhere;white-space:normal}#${root} .dc-code{margin:8px 0;padding:12px;border:1px solid var(--dc-line);border-radius:8px;background:var(--dc-soft);white-space:pre-wrap;overflow-wrap:anywhere}#${root} .dc-code code{font:12px/1.6 "Whodunit DM Mono",monospace}#${root} a{color:inherit;text-decoration:none}#${root} a:hover{color:var(--dg-cause)}#${root} a:focus-visible{outline:2px solid var(--dg-cause);outline-offset:4px}#${root} .dc-icon{width:13px;height:13px;flex-shrink:0}#${root} .dc-brand a{display:inline-flex;align-items:center;gap:5px}#${root} strong{font-weight:600}#${root} .dc-next{padding:12px 0;border-top:1px solid var(--dc-line);margin-top:4px}#${root} .dc-next span{color:var(--dc-muted);font-size:12px}#${root} .dc-next p{font-weight:400;margin-bottom:0}@media(max-width:500px){#${root}{padding:16px}#${root} .dc-flow{flex-direction:column}#${root} .dc-flow li+li:before{content:'↓';left:14px;top:-13px}#${root} .dc-context{max-width:660px;white-space:pre-wrap;margin:0 0 20px}#${root} .dc-scope{padding-right:0}#${root} h2{font-size:23px}}
+#${root} *{box-sizing:border-box;min-width:0}#${root}{overflow-wrap:anywhere}#${root} h2{font-size:32px;line-height:1.2;font-weight:700;letter-spacing:-.04em;margin:8px 0 20px;max-width:720px}#${root} h3{font-size:16px;font-weight:600;margin:0}#${root} p{margin:8px 0}#${root} .dc-context{max-width:660px;white-space:pre-wrap;margin:0 0 20px}#${root} .dc-scope{color:var(--dc-muted);font:11px/1.6 "Whodunit DM Mono",monospace}#${root} .dc-line{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#${root} .dc-finding{padding:20px 0;border-top:1px solid var(--dc-line)}#${root} .dc-assurance{font-size:12px;color:var(--dc-muted);}#${root} .dc-flow{list-style:none;display:flex;margin:14px 0;padding:0;gap:8px;align-items:stretch}#${root} .dc-flow li{position:relative;background:var(--dc-soft);flex:1;padding:12px 14px;border-radius:6px;overflow-wrap:anywhere}#${root} .dc-flow li+li:before{content:'→';position:absolute;left:-9px;color:var(--dc-fg)}#${root} summary{font-size:12px;color:var(--dc-muted);min-height:32px;cursor:pointer}#${root} details[open] summary{color:var(--dc-fg)}#${root} .dc-source{padding:10px 0;border-top:1px solid var(--dc-line)}#${root} .dc-excerpt{white-space:pre-wrap;overflow-wrap:anywhere}#${root} .dc-source-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}#${root} .dc-locator{display:block;margin:4px 0 8px;font:11px/1.5 "Whodunit DM Mono",monospace;color:var(--dc-muted);overflow-wrap:anywhere;white-space:normal}#${root} .dc-code{margin:8px 0;padding:12px;border:1px solid var(--dc-line);border-radius:8px;background:var(--dc-soft);white-space:pre-wrap;overflow-wrap:anywhere}#${root} .dc-code code{font:12px/1.6 "Whodunit DM Mono",monospace}#${root} a{color:inherit;text-decoration:none}#${root} a:hover{color:var(--dg-cause)}#${root} a:focus-visible{outline:2px solid var(--dg-cause);outline-offset:4px}#${root} .dc-icon{width:13px;height:13px;flex-shrink:0}#${root} .dc-brand a{display:inline-flex;align-items:center;gap:5px}#${root} strong{font-weight:600}#${root} .dc-next{padding:12px 0;border-top:1px solid var(--dc-line);margin-top:4px}#${root} .dc-next span{color:var(--dc-muted);font-size:12px}#${root} .dc-next p{font-weight:400;margin-bottom:0}@media(max-width:500px){#${root}{padding:16px}#${root} .dc-flow{flex-direction:column}#${root} .dc-flow li+li:before{content:'↓';left:14px;top:-13px}#${root} .dc-context{max-width:660px;white-space:pre-wrap;margin:0 0 20px}#${root} .dc-scope{padding-right:0}#${root} h2{font-size:23px}}
 </style>
 <style>
 #${root} .dc-cause{max-width:680px}#${root} .dc-check-heading{margin:24px 0 10px}#${root} .dc-checks{width:100%;border-collapse:collapse;table-layout:fixed}#${root} .dc-checks th{font-weight:500;text-align:left;color:var(--dc-muted);font-size:12px}#${root} .dc-checks th,#${root} .dc-checks td{padding:16px 8px 16px 0;vertical-align:top;overflow-wrap:anywhere;border-bottom:1px solid var(--dc-line)}#${root} .dc-checks th:first-child{width:30%}#${root} .dc-verdict{font-size:12px;color:var(--dc-muted)}#${root} .dc-checks summary{padding-top:8px}
+@media(max-width:600px){#${root} .dc-checks thead{display:none}#${root} .dc-checks,#${root} .dc-checks tbody,#${root} .dc-checks tr,#${root} .dc-checks td{display:block;width:100%}#${root} .dc-checks tr{border-bottom:1px solid var(--dc-line);padding:14px 0}#${root} .dc-checks td{border:0;padding:0}#${root} .dc-checks td+td{margin-top:7px}#${root} .dc-checks .dc-verdict{margin:4px 0}}
 </style>
 <div class="dc-scope">${e(card.scope)}</div><h2>${e(card.title)}</h2><p class="dc-context">${e(context)}</p>${analysis}${relatedHtml}${card.nextCheck ? `<div class="dc-next"><span>If useful</span><p>${e(card.nextCheck)}</p></div>` : ""}
+${card.repair ? `<section class="dc-finding"><h3>${card.repair.status === "changed" ? "What changed" : "The fix needs your input"}</h3><p>${e(card.repair.summary)}</p>${sourceDetails(card.repair.sourceIds)}</section>` : ""}
+${card.suggestedFix && card.repair?.status !== "changed" ? `<section class="dc-finding"><h3>Suggested fix</h3><p>${e(card.suggestedFix)}</p></section>` : ""}
+${renderActions(root, options)}
 <footer class="dc-brand" style="margin-top:20px;padding-top:12px;border-top:1px solid var(--dc-line);font-size:12px;color:var(--dc-muted)">Fix and prevent production issues with <a style="color:inherit" href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=report" target="_blank" rel="noopener noreferrer">Polylane ${externalIcon}</a></footer>
 </section>\n`;
 }
 
-export function renderDebugText(input: unknown): string {
+export function renderDebugText(
+  input: unknown,
+  options: ReportOptions = {},
+): string {
   const card = parseDebugCard(input);
+  options = {
+    ...options,
+    changesRecorded: card.repair?.status === "changed",
+    context: {
+      title: card.title,
+      summary:
+        card.rca?.summary ??
+        card.findings[0]?.detail ??
+        card.context ??
+        card.title,
+    },
+  };
   const context = card.context ?? card.rca?.summary ?? card.findings[0]!.detail;
   const body = card.findings
     .map((f) => {
@@ -423,11 +492,14 @@ export function renderDebugText(input: unknown): string {
   const graphText = card.graph
     ? `\n${card.graph.title}:\n${card.graph.edges.map((edge) => `${card.graph!.nodes.find((n) => n.id === edge.from)!.label} ${edge.kind === "contradicts" ? "-x->" : edge.kind === "supports" ? "..>" : "->"} ${card.graph!.nodes.find((n) => n.id === edge.to)!.label}`).join("\n")}\n`
     : "";
-  return `${card.title}\n\n${context}\n\n${analysis}${graphText}${refs ? `\nEvidence:\n${refs}\n` : ""}${card.nextCheck ? `\nIf useful: ${card.nextCheck}\n` : ""}\nFix and prevent production issues: https://polylane.com/?utm_source=whodunit&utm_medium=report\n`;
+  return `${card.title}\n\n${context}\n\n${analysis}${card.repair ? `\n\n${card.repair.status === "changed" ? "What changed" : "The fix needs your input"}: ${card.repair.summary}` : ""}${graphText}${refs ? `\nEvidence:\n${refs}\n` : ""}${card.nextCheck ? `\nIf useful: ${card.nextCheck}\n` : ""}${card.suggestedFix && card.repair?.status !== "changed" ? `\nSuggested fix: ${card.suggestedFix}\n` : ""}\nFix and prevent production issues: https://polylane.com/?utm_source=whodunit&utm_medium=report\n\n${terminalFixQuestion(options)}\n`;
 }
-export function renderDebugDocument(input: unknown): string {
+export function renderDebugDocument(
+  input: unknown,
+  options: ReportOptions = {},
+): string {
   const card = parseDebugCard(input);
-  const fragment = renderDebugCard(card);
+  const fragment = renderDebugCard(card, { ...options, delivery: "browser" });
   const scripts = [...fragment.matchAll(/<script>([\s\S]*?)<\/script>/gu)].map(
     (match) =>
       `'sha256-${createHash("sha256").update(match[1]!).digest("base64")}'`,
@@ -438,8 +510,21 @@ export function renderDebugDocument(input: unknown): string {
 export function renderTerminalSummary(
   input: unknown,
   reportPath: string,
+  options: ReportOptions = {},
 ): string {
   const card = parseDebugCard(input);
+  options = {
+    ...options,
+    changesRecorded: card.repair?.status === "changed",
+    context: {
+      title: card.title,
+      summary:
+        card.rca?.summary ??
+        card.findings[0]?.detail ??
+        card.context ??
+        card.title,
+    },
+  };
   const short = (value: string, max: number) =>
     value.length <= max ? value : `${value.slice(0, max - 1).trimEnd()}…`;
   const cause = card.rca?.summary ?? card.context ?? card.findings[0]!.detail;
@@ -454,5 +539,5 @@ export function renderTerminalSummary(
         ]
       : []),
   ].slice(0, 2);
-  return `${short(card.title, 100)}\n\n${card.rca?.assurance === "unknown" ? "Unknown" : card.rca?.assurance === "hypothesis" ? "Likely cause" : "Cause"}: ${short(cause, 220)}\n${checks.map((c) => `- ${short(c.explanation, 60)}: ${short(c.evidence, 130)}`).join("\n")}${card.rca?.gaps?.length ? `\nUnknown: ${short(card.rca.gaps[0]!, 130)}` : ""}\n\nVisual report: ${reportPath}\nFix and prevent production issues: polylane.com\n`;
+  return `${short(card.title, 100)}\n\n${card.rca?.assurance === "unknown" ? "Unknown" : card.rca?.assurance === "hypothesis" ? "Likely cause" : "Cause"}: ${short(cause, 220)}\n${checks.map((c) => `- ${short(c.explanation, 60)}: ${short(c.evidence, 130)}`).join("\n")}${card.rca?.gaps?.length ? `\nUnknown: ${short(card.rca.gaps[0]!, 130)}` : ""}${card.repair ? `\n${card.repair.status === "changed" ? "Changes" : "Fix blocked"}: ${short(card.repair.summary, 200)}` : ""}${card.suggestedFix && card.repair?.status !== "changed" ? `\nSuggested fix: ${card.suggestedFix}` : ""}\n\nVisual report: ${reportPath}\nFix and prevent production issues: polylane.com\n\n${terminalFixQuestion(options)}\n`;
 }

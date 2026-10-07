@@ -26,4 +26,5 @@ jobs:
       - run: node scripts/install-smoke.mjs
       - run: node scripts/npx-smoke.mjs
       - run: node scripts/inline-smoke.mjs
+      - run: node scripts/fix-flow-smoke.mjs
       - run: git diff --exit-code -- src/report-assets.ts skill/whodunit/scripts/lib skill/whodunit/assets

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import {
   parseDebugCard,
   renderDebugCard,
@@ -47,7 +48,9 @@ test("untrusted content is escaped and source locators stay inert", () => {
   const html = renderDebugCard(f);
   expect(html).toContain("&lt;img");
   expect(html).toContain("&lt;script&gt;");
-  expect(html).not.toContain("<script>");
+  expect(html).not.toContain("<script>alert(1)");
+  expect(html).not.toContain("<script>unsafe()");
+  expect(html).not.toContain("<script>bad()");
   expect(html).not.toContain('href="javascript:');
   expect(html.match(/href=/gu)).toHaveLength(1);
 });
@@ -134,7 +137,9 @@ test("normal multiline source quotes render literally while unsafe control bytes
   const html = renderDebugCard(f);
   expect(html).toContain('class="dc-excerpt"');
   expect(html).toContain("&lt;script&gt;");
-  expect(html).not.toContain("<script>");
+  expect(html).not.toContain("<script>alert(1)");
+  expect(html).not.toContain("<script>unsafe()");
+  expect(html).not.toContain("<script>bad()");
   f.sources[0]!.excerpt = "source\u0000invalid";
   expect(() => parseDebugCard(f)).toThrow(
     "source excerpt contains unsupported control characters",
@@ -171,7 +176,7 @@ test("terminal and browser reports carry the same context and evidence without h
   expect(html).toContain(f.context);
   expect(html).toContain("default-src 'none'");
   expect(html).not.toContain("window.openai");
-  expect(html).not.toContain("<script");
+  expect(html).not.toContain("<script>");
   let out = "",
     reads = 0;
   const io = {
@@ -244,7 +249,9 @@ test("RCA remains visible and escaped in text and visual reports, without a fill
   const html = renderDebugCard(f),
     text = renderDebugText(f);
   expect(html).toContain("&lt;script&gt;");
-  expect(html).not.toContain("<script>");
+  expect(html).not.toContain("<script>alert(1)");
+  expect(html).not.toContain("<script>unsafe()");
+  expect(html).not.toContain("<script>bad()");
   expect(html).toContain(f.rca.checks[0]!.evidence);
   expect(html).not.toContain('class="dc-flow"');
   expect(text).toContain(f.rca.summary);
@@ -339,7 +346,12 @@ test("graph labels and evidence stay escaped; the browser permits only the gener
   expect(html).not.toContain("<img onerror");
   expect(html).toContain("script-src 'sha256-");
   expect(html).not.toContain("script-src 'unsafe-inline'");
-  expect(html.match(/<script>/gu)).toHaveLength(1);
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/gu)];
+  expect(scripts.length).toBeGreaterThan(0);
+  for (const script of scripts) {
+    const hash = createHash("sha256").update(script[1]!).digest("base64");
+    expect(html).toContain(`'sha256-${hash}'`);
+  }
   expect(html).not.toContain("fetch(");
   expect(text).toContain("-> Reader uses old name");
   expect(html).toContain('data-panel="reader"');

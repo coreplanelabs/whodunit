@@ -49,6 +49,10 @@ for (const required of [
   "skill/whodunit/scripts/lib/index.js",
   "skill/whodunit/scripts/lib/graph.js",
   "skill/whodunit/scripts/lib/inline.js",
+  "skill/whodunit/scripts/lib/actions.js",
+  "skill/whodunit/scripts/lib/preferences.js",
+  "skill/whodunit/references/fixing.md",
+  "skill/whodunit/references/writing.md",
 ])
   assert.ok(
     pack.files.some((f) => f.path === required),

@@ -1,12 +1,18 @@
 import { type LocalIo } from "./local.js";
+import { type PreferencesSnapshot } from "./preferences.js";
 export interface CliIo {
     read(path: string): string;
     out(text: string): void;
     error(text: string): void;
     write?(path: string, text: string): void;
     inline?(fragment: string): string;
+    ask?(question: string): Promise<string>;
+    preferences?: {
+        read(home?: string): PreferencesSnapshot;
+        write(autoFix: boolean, home?: string): PreferencesSnapshot;
+    };
 }
-export declare function nativeCliIo(): CliIo;
+export declare function nativeCliIo(preferencesHome?: string): CliIo;
 export interface FileIo {
     open(path: string): number;
     stat(fd: number): {

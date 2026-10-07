@@ -1,10 +1,11 @@
 {
   "schemaVersion": "debug-card/1",
   "title": "Login still reads the old setting",
-  "scope": "Login failure \u00b7 Configuration and recent changes",
-  "context": "A recent change renamed the login setting. The login code still uses its old name, so it receives no client ID.",
+  "suggestedFix": "Update login to read authClientId, then test login with the renamed setting.",
+  "scope": "Login error \u00b7 Code and recent changes",
+  "context": "A change renamed the login setting. The login code still uses the old name, so it cannot find the client ID.",
   "rca": {
-    "summary": "The settings define authClientId, but login asks for clientId. The lookup returns no value, which fits the missing-ID error.",
+    "summary": "The settings define authClientId. The login code asks for clientId. That key is missing, which matches the reported error.",
     "assurance": "reported",
     "sourceIds": ["settings", "reader", "error"],
     "checks": [
@@ -25,7 +26,7 @@
       "summary": "The last settings edit renamed clientId to authClientId. The login reader was unchanged.",
       "sourceIds": ["change"]
     },
-    "gaps": ["Login has not been rerun with matching setting names."]
+    "gaps": ["We have not tested login with the matching setting name."]
   },
   "sources": [
     {

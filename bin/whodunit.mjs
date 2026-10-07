@@ -10,14 +10,14 @@ if (Number(process.versions.node.split(".")[0]) < 22) {
 }
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), ".."),
   args = process.argv.slice(2);
-if (["local", "history", "card"].includes(args[0])) {
+if (["local", "history", "card", "settings"].includes(args[0])) {
   const { dispatchCli, nativeCliIo } = await import(
     "../skill/whodunit/scripts/lib/cli-api.js"
   );
   process.exitCode = await dispatchCli(args, nativeCliIo());
 } else if (args[0] === "--help") {
   console.log(
-    "npx @coreplane/whodunit [--root PROJECT | --home DIRECTORY] [--agent all|codex|claude|opencode]\nInstall for automatic skill discovery in all your projects. --root installs only in one project.\nData helpers: local, history, card.",
+    "npx @coreplane/whodunit [--root PROJECT | --home DIRECTORY] [--agent all|codex|claude|opencode]\nInstall for automatic skill discovery in all your projects. --root installs only in one project.\nData helpers: local, history, card. Preferences: settings.",
   );
 } else {
   try {
