@@ -48,7 +48,7 @@ export interface DebugCard {
     }[];
 }
 export declare function parseDebugCard(value: unknown): DebugCard;
-export declare function renderDebugCard(input: unknown, options?: ReportOptions): string;
+export declare function renderDebugCard(input: unknown, _options?: ReportOptions): string;
 export declare function renderDebugText(input: unknown, options?: ReportOptions): string;
 export declare function renderDebugDocument(input: unknown, options?: ReportOptions): string;
 export declare function renderTerminalSummary(input: unknown, reportPath: string, options?: ReportOptions): string;

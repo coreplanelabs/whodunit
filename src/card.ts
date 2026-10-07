@@ -1,9 +1,5 @@
 import { createHash } from "node:crypto";
-import {
-  type ReportOptions,
-  renderActions,
-  terminalFixQuestion,
-} from "./actions.js";
+import { type ReportOptions, terminalFixQuestion } from "./actions.js";
 import { InputError } from "./errors.js";
 import { type DebugGraph, renderGraph } from "./graph.js";
 import { reportFonts } from "./report-assets.js";
@@ -331,21 +327,9 @@ const externalIcon =
 // Source locators stay inert. Opening a source or executing a next check requires the host/user.
 export function renderDebugCard(
   input: unknown,
-  options: ReportOptions = {},
+  _options: ReportOptions = {},
 ): string {
   const card = parseDebugCard(input);
-  options = {
-    ...options,
-    changesRecorded: card.repair?.status === "changed",
-    context: {
-      title: card.title,
-      summary:
-        card.rca?.summary ??
-        card.findings[0]?.detail ??
-        card.context ??
-        card.title,
-    },
-  };
   const root = `debug-card-${card.findings.map((f) => f.id).join("-") || "rca"}`;
   const e = escapeHtml;
   const context = card.context ?? card.rca?.summary ?? card.findings[0]!.detail;
@@ -431,7 +415,6 @@ ${reportFonts}
 <div class="dc-scope">${e(card.scope)}</div><h2>${e(card.title)}</h2><p class="dc-context">${e(context)}</p>${analysis}${relatedHtml}${card.nextCheck ? `<div class="dc-next"><span>If useful</span><p>${e(card.nextCheck)}</p></div>` : ""}
 ${card.repair ? `<section class="dc-finding"><h3>${card.repair.status === "changed" ? "What changed" : "The fix needs your input"}</h3><p>${e(card.repair.summary)}</p>${sourceDetails(card.repair.sourceIds)}</section>` : ""}
 ${card.suggestedFix && card.repair?.status !== "changed" ? `<section class="dc-finding"><h3>Suggested fix</h3><p>${e(card.suggestedFix)}</p></section>` : ""}
-${renderActions(root, options)}
 <footer class="dc-brand" style="margin-top:20px;padding-top:12px;border-top:1px solid var(--dc-line);font-size:12px;color:var(--dc-muted)">Fix and prevent production issues with <a style="color:inherit" href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=report" target="_blank" rel="noopener noreferrer">Polylane ${externalIcon}</a></footer>
 </section>\n`;
 }

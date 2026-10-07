@@ -26,7 +26,7 @@ Ask your agent what went wrong, or invoke the skill directly:
 
 Claude Code uses `/whodunit`; Codex supports `$whodunit`. In any supported client, you can ask: “Use Whodunit to investigate why login stopped working.” Give the actual symptom or error. You do not need to tell the agent to read a skill-file path.
 
-Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves the report in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report. A short suggested fix appears above the controls. In Codex, **Fix it** sends a request to your agent. Saved browser reports have no fix controls. The terminal asks whether you want a fix.
+Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves the report in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report. A short suggested fix appears above the controls. When the client supports them, Codex shows native fix actions below the visual. Other clients ask in the conversation: yes, no, or always. The same text question is the fallback if buttons are unavailable or fail. The report has no embedded agent controls. Saved browser reports have no fix controls. The terminal asks whether you want a fix.
 
 ## Auto-fix
 
@@ -42,7 +42,7 @@ The choice is stored in `~/.coreplanelabs/whodunit/settings.json`. The report he
 
 ## Website
 
-The website at [whodunit.dev](https://whodunit.dev) uses the same report renderer. Its example includes a suggested fix, sources, and an interactive graph. The example's fix buttons link to Polylane. In your coding agent, the buttons send requests to that agent.
+The website at [whodunit.dev](https://whodunit.dev) uses the same report renderer. Its example includes a suggested fix, sources, and an interactive graph. The example has one Polylane link. Fix requests stay in your coding agent's conversation.
 
 The static site runs in Polycorp's Cloudflare account. To deploy, sign in to that account with Wrangler and run `npm run deploy:site`. The command builds and checks the site before deploying. The custom domain serves the site publicly; it does not use Cloudflare Access.
 

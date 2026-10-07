@@ -13,4 +13,5 @@ export interface ReportOptions {
 export declare function fixRequest(options: ReportOptions): string;
 export declare function preferenceRequest(enabled: boolean): string;
 export declare function terminalFixQuestion(options?: ReportOptions): string;
-export declare function renderActions(root: string, options: ReportOptions): string;
+export declare function alwaysFixRequest(options: ReportOptions): string;
+export declare function nativeFollowups(options: ReportOptions): string;

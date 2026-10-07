@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { renderActions, terminalFixQuestion, } from "./actions.js";
+import { terminalFixQuestion } from "./actions.js";
 import { InputError } from "./errors.js";
 import { renderGraph } from "./graph.js";
 import { reportFonts } from "./report-assets.js";
@@ -227,19 +227,8 @@ function sourceHtml(source) {
 }
 const externalIcon = '<svg class="dc-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
 // Source locators stay inert. Opening a source or executing a next check requires the host/user.
-export function renderDebugCard(input, options = {}) {
+export function renderDebugCard(input, _options = {}) {
     const card = parseDebugCard(input);
-    options = {
-        ...options,
-        changesRecorded: card.repair?.status === "changed",
-        context: {
-            title: card.title,
-            summary: card.rca?.summary ??
-                card.findings[0]?.detail ??
-                card.context ??
-                card.title,
-        },
-    };
     const root = `debug-card-${card.findings.map((f) => f.id).join("-") || "rca"}`;
     const e = escapeHtml;
     const context = card.context ?? card.rca?.summary ?? card.findings[0].detail;
@@ -322,7 +311,6 @@ ${reportFonts}
 <div class="dc-scope">${e(card.scope)}</div><h2>${e(card.title)}</h2><p class="dc-context">${e(context)}</p>${analysis}${relatedHtml}${card.nextCheck ? `<div class="dc-next"><span>If useful</span><p>${e(card.nextCheck)}</p></div>` : ""}
 ${card.repair ? `<section class="dc-finding"><h3>${card.repair.status === "changed" ? "What changed" : "The fix needs your input"}</h3><p>${e(card.repair.summary)}</p>${sourceDetails(card.repair.sourceIds)}</section>` : ""}
 ${card.suggestedFix && card.repair?.status !== "changed" ? `<section class="dc-finding"><h3>Suggested fix</h3><p>${e(card.suggestedFix)}</p></section>` : ""}
-${renderActions(root, options)}
 <footer class="dc-brand" style="margin-top:20px;padding-top:12px;border-top:1px solid var(--dc-line);font-size:12px;color:var(--dc-muted)">Fix and prevent production issues with <a style="color:inherit" href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=report" target="_blank" rel="noopener noreferrer">Polylane ${externalIcon}</a></footer>
 </section>\n`;
 }

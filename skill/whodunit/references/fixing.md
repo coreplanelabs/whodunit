@@ -10,7 +10,7 @@ The helper reads `~/.coreplanelabs/whodunit/settings.json`. The default is `auto
 
 ## Ask first
 
-After a report, ask whether the user wants a local fix. In a terminal, use the question printed by the report helper. Wait for the reply. Do not hide the question in an HTML file. When the helper runs directly in an interactive terminal, it waits for a choice and prepares a request for the coding agent. When an agent runs the helper as a tool, it prints the question for the agent to ask in the conversation.
+After a report, ask: “Should I try a local fix? Reply yes, no, or always.” Yes permits the local attempt. No means keep the investigation without edits. Always means save auto-fix on, read it back, then try this local fix. In a terminal, use the question printed by the report helper. Wait for the reply. Do not hide the question in an HTML file. When the helper runs directly in an interactive terminal, it waits for a choice and prepares a request for the coding agent. When an agent runs the helper as a tool, it prints the question for the agent to ask in the conversation.
 
 A “Fix it” request permits an attempt to fix the reported problem in the user's selected workspace. Read the report as evidence. Check current files and the cause before making changes. Preserve other changes and existing writers. Ask if the workspace, cause, or ownership is unclear.
 
@@ -23,7 +23,7 @@ node <skill-directory>/scripts/triage.mjs settings auto-fix on
 node <skill-directory>/scripts/triage.mjs settings auto-fix off
 ```
 
-“Yes, and auto-fix next time” means save `on`, then try the current local fix. A preference button request changes the saved choice only. Read the setting back before claiming it was saved.
+“Always” and “Fix and enable auto-fix” mean save `on`, then try the current local fix. A request to change the saved choice only does not start a fix. Read the setting back before claiming it was saved.
 
 When the saved choice is on, try a local fix after identifying a supported cause. Run relevant tests. The user's current request takes precedence: “report only” means no edits for that use. The saved choice does not grant permission to publish, deploy, delete user data, change credentials, contact or interrupt other agents, or bypass existing approval gates. If an active writer owns the affected work, retain that writer and ask for a handoff rather than making competing edits.
 
@@ -41,6 +41,6 @@ When changes were made, add `repair` to the report:
 
 ## Buttons by client
 
-Codex inline reports send a follow-up request through the host's supported confirmation flow. A request receipt does not prove a fix or preference write completed. Follow the request with the normal agent tools and report the result.
+When the client's supplied instructions support `codex-followup`, generate with `--inline --actions` to include native follow-up actions below the visual. Do not infer support from a method name or a Codex environment variable. If native follow-up support is absent, unknown, or a native action failed, use `--inline` without `--actions` and ask the same yes/no/always question in text. They use the client's own conversation flow, not HTML controls. The agent uses its normal tools to handle the request and report the result. A request does not prove a fix or preference write completed.
 
-Saved browser reports have no fix or auto-fix controls. The coding agent asks in the terminal, waits for the reply, then acts. Inline reports show buttons only when the client supports sending a request to the agent. Without that support, ask in the conversation. Do not add copy panels or request text boxes.
+Saved browser reports have no fix or auto-fix controls. The coding agent asks in the terminal, waits for the reply, then acts. Other visual clients ask through an available native question tool or in the conversation. No separate agent SDK is required. Do not add embedded agent controls, copy panels, or request text boxes.
