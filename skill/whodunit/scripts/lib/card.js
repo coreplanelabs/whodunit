@@ -192,11 +192,7 @@ const escapeHtml = (s) => s
 // Source locators stay inert. Opening a source or executing a next check requires the host/user.
 export function renderDebugCard(input) {
     const card = parseDebugCard(input);
-    const fingerprint = createHash("sha256")
-        .update(JSON.stringify(card))
-        .digest("hex")
-        .slice(0, 12);
-    const root = `debug-card-${card.findings.map((f) => f.id).join("-") || "rca"}-${fingerprint}`;
+    const root = `debug-card-${card.findings.map((f) => f.id).join("-") || "rca"}`;
     const e = escapeHtml;
     const context = card.context ?? card.rca?.summary ?? card.findings[0].detail;
     const used = new Set(card.findings.flatMap((f) => f.sourceIds));

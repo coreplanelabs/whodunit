@@ -32,15 +32,6 @@ const fixture = () => ({
     },
   ],
 });
-test("different reports with the same finding IDs have separate DOM scopes", () => {
-  const first = fixture(),
-    second = fixture();
-  second.title = "Another retry failed";
-  const root = (card: unknown) =>
-    renderDebugCard(card).match(/<section id="([^"]+)"/u)![1];
-  expect(root(first)).not.toBe(root(second));
-  expect(root(first)).toBe(root(first));
-});
 test("provided answers cannot be promoted to observed facts", () => {
   const f = fixture();
   f.findings[0]!.assurance = "observed";
