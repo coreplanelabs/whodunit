@@ -40,6 +40,12 @@ npx @coreplane/whodunit settings show
 
 The choice is stored in `~/.coreplanelabs/whodunit/settings.json`. The report helper reads it. The skill asks your agent to read it before editing. Auto-fix asks the agent to try local code changes and relevant tests when the cause is supported. The agent may need more evidence or permission. “Report only” stops edits for the current use. Publishing, deployment, credentials, other agents and existing approval gates keep their normal boundaries.
 
+## Website
+
+The website at [whodunit.dev](https://whodunit.dev) uses the same report renderer. Its example includes a suggested fix, sources, and an interactive graph. The example's fix buttons link to Polylane. In your coding agent, the buttons send requests to that agent.
+
+The static site runs in Polycorp's Cloudflare account. To deploy, sign in to that account with Wrangler and run `npm run deploy:site`. The command builds and checks the site before deploying. The custom domain serves the site publicly; it does not use Cloudflare Access.
+
 ## Scope
 
 - Node 22+. The Git helpers require a committed repository; the agent can use its own file tools otherwise.

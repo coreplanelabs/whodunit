@@ -15,7 +15,8 @@
     "prepublishOnly": "npm run verify",
     "lint": "biome check .",
     "build:site": "node scripts/build-site.mjs",
-    "check:site": "npm run build:site && node scripts/check-site.mjs"
+    "check:site": "npm run build:site && node scripts/check-site.mjs",
+    "deploy:site": "npm run check:site && npx --yes wrangler@4.118.0 deploy --config wrangler.json"
   },
   "devDependencies": {
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
@@ -27,6 +28,6 @@
     "type": "git",
     "url": "git+https://github.com/coreplanelabs/whodunit.git"
   },
-  "homepage": "https://debug.polycorp.foo",
+  "homepage": "https://whodunit.dev",
   "private": true
 }

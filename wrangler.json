@@ -1,0 +1,17 @@
+{
+  "name": "whodunit",
+  "account_id": "efbcecf27f8ef6ef0ceae56a78415cd0",
+  "compatibility_date": "2026-10-07",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "whodunit.dev",
+      "custom_domain": true,
+      "zone_id": "41af86024e759c0c8cc38e3ff836548b"
+    }
+  ],
+  "assets": {
+    "directory": "./.cache/site"
+  }
+}
