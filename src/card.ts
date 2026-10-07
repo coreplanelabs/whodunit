@@ -422,7 +422,7 @@ export function renderTerminalSummary(
 		value.length <= max ? value : `${value.slice(0, max - 1).trimEnd()}…`;
 	const cause = card.rca?.summary ?? card.context ?? card.findings[0]!.detail;
 	const checks = [
-		...(card.rca?.checks ?? []),
+		...(card.rca?.checks.slice(0, card.rca.history ? 1 : 2) ?? []),
 		...(card.rca?.history
 			? [
 					{
