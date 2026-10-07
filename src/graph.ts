@@ -65,17 +65,24 @@ export function renderGraph(
 <script>
 (()=>{
  const root=document.getElementById('${root}');if(!root)return;
- const map=root.querySelector('.dg-map'),svg=map.querySelector('svg'),paths=svg.querySelector('.dg-paths'),edges=${data};
+ const map=root.querySelector('.dg-map'),svg=map?.querySelector('svg'),paths=svg?.querySelector('.dg-paths'),edges=${data};if(!map||!svg||!paths)return;
  const nodes=Array.from(root.querySelectorAll('[data-node]')),panels=Array.from(root.querySelectorAll('[data-panel]'));
  const byId=new Map(nodes.map(n=>[n.dataset.node,n]));
- const draw=()=>{const box=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+box.width+' '+box.height);paths.replaceChildren();
- edges.forEach(edge=>{const a=byId.get(edge.from).getBoundingClientRect(),b=byId.get(edge.to).getBoundingClientRect();let d;
+ let frame=null,lastGeometry='';
+ const draw=()=>{frame=null;if(!root.isConnected)return;const box=map.getBoundingClientRect();if(!box.width||!box.height)return;
+ const bounds=new Map(nodes.map(n=>[n.dataset.node,n.getBoundingClientRect()]));
+ const lines=edges.map(edge=>{const a=bounds.get(edge.from),b=bounds.get(edge.to);if(!a||!b)return '';let d;
  if(Math.abs(a.left-b.left)<5){const down=b.top>a.top,x=a.left+a.width/2-box.left,y=down?a.bottom-box.top:a.top-box.top,t=down?b.top-box.top:b.bottom-box.top,side=edge.kind==='contradicts'?10:box.width-10,sign=down?1:-1;d='M '+x+' '+y+' C '+x+' '+(y+sign*10)+' '+side+' '+(y+sign*10)+' '+side+' '+(y+sign*18)+' L '+side+' '+(t-sign*18)+' C '+side+' '+(t-sign*10)+' '+x+' '+(t-sign*10)+' '+x+' '+t;}
  else if(edge.kind==='contradicts'){const x=a.right-box.left,y=a.top+a.height/2-box.top,t=b.left+b.width/2-box.left,u=b.bottom-box.top,floor=Math.max(a.bottom,b.bottom)-box.top+12;d='M '+x+' '+y+' C '+(x+30)+' '+floor+' '+t+' '+floor+' '+t+' '+u;}
  else{const forward=b.left>a.left,x=forward?a.right-box.left:a.left-box.left,y=a.top+a.height/2-box.top,t=forward?b.left-box.left:b.right-box.left,u=b.top+b.height/2-box.top,m=(x+t)/2;d='M '+x+' '+y+' C '+m+' '+y+' '+m+' '+u+' '+t+' '+u;}
- const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',d);path.setAttribute('class','dg-link');path.dataset.kind=edge.kind;path.setAttribute('marker-end','url(#${root}-arrow)');paths.append(path);});};
+ return d;});
+ const viewBox='0 0 '+box.width+' '+box.height,geometry=JSON.stringify([viewBox,lines]);if(geometry===lastGeometry)return;lastGeometry=geometry;
+ svg.setAttribute('viewBox',viewBox);
+ lines.forEach((d,index)=>{let path=paths.children[index];if(!path){path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('class','dg-link');path.dataset.kind=edges[index].kind;path.setAttribute('marker-end','url(#${root}-arrow)');paths.append(path);}path.setAttribute('d',d);});};
+ // Resize callbacks must not mutate layout during the host's measurement pass.
+ const schedule=()=>{if(frame===null)frame=requestAnimationFrame(draw);};
  nodes.forEach(node=>node.addEventListener('click',()=>{nodes.forEach(n=>n.setAttribute('aria-pressed',String(n===node)));panels.forEach(p=>p.hidden=p.dataset.panel!==node.dataset.node);}));
- if(typeof ResizeObserver!=='undefined')new ResizeObserver(draw).observe(map);else window.addEventListener('resize',draw);draw();
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(schedule).observe(map);else window.addEventListener('resize',schedule);schedule();
 })();
 </script>
 </div>`;
