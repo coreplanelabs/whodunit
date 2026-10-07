@@ -25,9 +25,11 @@
     "build": "tsgo -p tsconfig.build.json",
     "typecheck": "tsgo -p tsconfig.json --noEmit",
     "test": "bun test --isolate",
-    "verify": "npm run lint && npm run typecheck && npm run build && npm run test && node scripts/check-package.mjs",
+    "verify": "npm run lint && npm run typecheck && npm run build && npm run test && npm run check:site && node scripts/check-package.mjs",
     "prepublishOnly": "npm run verify",
-    "lint": "biome check ."
+    "lint": "biome check .",
+    "build:site": "node scripts/build-site.mjs",
+    "check:site": "npm run build:site && node scripts/check-site.mjs"
   },
   "devDependencies": {
     "@typescript/native-preview": "7.0.0-dev.20260707.2",

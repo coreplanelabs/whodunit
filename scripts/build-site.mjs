@@ -14,7 +14,10 @@ const html = fs
   .replaceAll("__BRAND__", brand)
   .replaceAll("__REPO__", repo)
   .replaceAll("__PACKAGE__", manifest.name)
-  .replaceAll("__COMMAND__", process.argv[3] ?? `npx ${manifest.name}`)
+  .replaceAll(
+    "__COMMAND__",
+    process.argv[3] ?? "npx github:coreplanelabs/whodunit",
+  )
   .replaceAll("__SLUG__", slug);
 fs.writeFileSync(path.join(output, "index.html"), html);
 for (const name of ["style.css", "site.js"])
@@ -74,6 +77,8 @@ fs.writeFileSync(
 );
 fs.writeFileSync(
   path.join(output, "_headers"),
-  `/*\n  Content-Security-Policy: default-src 'none'; style-src 'self'; script-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Cache-Control: no-store\n/example.html\n  Content-Security-Policy: ${csp}; frame-ancestors 'self'\n`,
+  // Cloudflare merges overlapping header rules. Keep HTML policies disjoint,
+  // including the extensionless aliases used by static asset routing.
+  `/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Cache-Control: no-store\n${["/", "/index", "/index.html"].map((route) => `${route}\n  Content-Security-Policy: default-src 'none'; style-src 'self'; script-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\n`).join("")}${["/example", "/example.html"].map((route) => `${route}\n  Content-Security-Policy: ${csp}; frame-ancestors 'self'\n`).join("")}`,
 );
 console.log(output);

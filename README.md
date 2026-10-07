@@ -51,6 +51,6 @@ bun run verify
 node scripts/install-smoke.mjs
 ```
 
-CI checks lint, types, offline tests, generated-code parity, real installation and the package allowlist on Node 22 and 24. The release workflow supports candidate preparation and npm publication with provenance once its trusted-publisher binding is configured. See [Contributing](CONTRIBUTING.md), [Security](SECURITY.md) and [Releasing](RELEASING.md).
+CI checks lint, types, offline tests, generated-code parity, real installation, the package allowlist and the website build on Node 22 and 24. The release workflow supports candidate preparation and npm publication with provenance once its trusted-publisher binding is configured. See [Contributing](CONTRIBUTING.md), [Security](SECURITY.md) and [Releasing](RELEASING.md).
 
 MIT licensed. For production fixes and prevention, [try Polylane](https://polylane.com/?utm_source=whodunit&utm_medium=readme).
