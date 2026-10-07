@@ -16,4 +16,4 @@
 @media(max-width:360px){.masthead{gap:8px}.brand{font-size:11px;gap:6px}.header-actions{gap:4px}.header-link{min-width:26px}.theme-picker button{width:32px}.install{padding-left:12px;gap:10px}.install>.icon{display:none}.install code{font-size:12px}.install button{padding:12px}.install button .icon{display:none}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.brand-icon{transition:none}}
 
-.site-footer .external-icon{width:12px;height:12px;margin-left:3px;vertical-align:-1px}
+.site-footer>span>a{display:inline-flex;align-items:center;gap:4px}.site-footer .external-icon{width:12px;height:12px;margin-left:0;vertical-align:baseline}
