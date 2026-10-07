@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { InputError } from "./errors.js";
 import { type DebugGraph, renderGraph } from "./graph.js";
+import { reportFonts } from "./report-assets.js";
 import { hasControlCharacters, redact } from "./validation.js";
 
 type Assurance = "observed" | "reported" | "hypothesis" | "unknown";
@@ -42,6 +43,7 @@ export interface DebugCard {
     label: string;
     locator: string;
     excerpt: string;
+    format?: "code" | "text";
   }[];
 }
 const origins = [
@@ -88,7 +90,15 @@ export function parseDebugCard(value: unknown): DebugCard {
   const sources = list(v.sources, 0, 8).map((raw) => {
     const s = obj(raw);
     if (!origins.includes(s.origin as (typeof origins)[number])) fail();
+    if (
+      s.format !== undefined &&
+      !["code", "text"].includes(s.format as string)
+    )
+      fail("source format is unsupported");
     return {
+      ...(s.format === undefined
+        ? {}
+        : { format: s.format as "code" | "text" }),
       origin: s.origin as (typeof origins)[number],
       id: id(s.id),
       label: str(s.label, 100),
@@ -273,6 +283,17 @@ const escapeHtml = (s: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+const provenance = {
+  direct_read: "Checked locally",
+  provided_answer: "Supplied evidence",
+  session_statement: "Agent statement",
+  user_input: "Reported by you",
+};
+function sourceHtml(source: DebugCard["sources"][number]): string {
+  return `<div class="dc-source"><div class="dc-source-heading"><strong>${escapeHtml(source.label)}</strong><span class="dc-assurance">${provenance[source.origin]}</span></div><code class="dc-locator">${escapeHtml(source.locator)}</code>${source.format === "code" ? `<pre class="dc-code"><code>${escapeHtml(source.excerpt)}</code></pre>` : `<p class="dc-excerpt">${escapeHtml(source.excerpt)}</p>`}</div>`;
+}
+const externalIcon =
+  '<svg class="dc-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
 // Source locators stay inert. Opening a source or executing a next check requires the host/user.
 export function renderDebugCard(input: unknown): string {
   const card = parseDebugCard(input);
@@ -292,7 +313,7 @@ export function renderDebugCard(input: unknown): string {
       used.add(ref);
   const related = card.sources.filter((s) => !used.has(s.id));
   const relatedHtml = related.length
-    ? `<details class="dc-related"><summary>Related evidence</summary>${related.map((s) => `<div class="dc-source"><strong>${escapeHtml(s.label)}</strong><p class="dc-excerpt">${escapeHtml(s.excerpt)}</p><code>${escapeHtml(s.locator)}</code></div>`).join("")}</details>`
+    ? `<details class="dc-related"><summary>Related evidence</summary>${related.map(sourceHtml).join("")}</details>`
     : "";
   const labels = {
     observed: "Source evidence",
@@ -306,7 +327,7 @@ export function renderDebugCard(input: unknown): string {
         `<article class="dc-finding"><div class="dc-line"><h3>${e(f.title)}</h3></div><ol class="dc-flow">${f.steps.map((step) => `<li>${e(step)}</li>`).join("")}</ol><details><summary>See the evidence</summary><p class="dc-assurance">${e(labels[f.assurance])}</p><p>${e(f.detail)}</p>${f.sourceIds
           .map((ref) => {
             const s = card.sources.find((s) => s.id === ref)!;
-            return `<div class="dc-source"><strong>${e(s.label)}</strong><span class="dc-assurance"> · ${e(s.origin.replaceAll("_", " "))}</span><p class="dc-excerpt">${e(s.excerpt)}</p><code>${e(s.locator)}</code></div>`;
+            return sourceHtml(s);
           })
           .join("")}</details></article>`,
     )
@@ -316,7 +337,7 @@ export function renderDebugCard(input: unknown): string {
       ? `<details><summary>Sources</summary>${refs
           .map((ref) => {
             const s = card.sources.find((s) => s.id === ref)!;
-            return `<div class="dc-source"><strong>${e(s.label)}</strong><span class="dc-assurance"> · ${e(s.origin.replaceAll("_", " "))}</span><p class="dc-excerpt">${e(s.excerpt)}</p><code>${e(s.locator)}</code></div>`;
+            return sourceHtml(s);
           })
           .join("")}</details>`
       : "";
@@ -349,14 +370,15 @@ export function renderDebugCard(input: unknown): string {
     : `${graphHtml}${findings}`;
   return `<section id="${root}" class="dc-product" aria-label="Debugging issue card">
 <style>
-#${root}{--dc-bg:light-dark(#fafbf8,#15201f);--dc-fg:light-dark(#182b31,#e8f2ed);--dc-muted:light-dark(#506564,#b5c8c2);--dc-line:light-dark(#d4dfd9,#3f5650);--dc-soft:light-dark(#edf5f0,#213b31);color:var(--dc-fg);background:var(--dc-bg);font:400 14px/1.5 system-ui,sans-serif;padding:24px;border-radius:16px;box-sizing:border-box;color-scheme:light dark}
-#${root} *{box-sizing:border-box}#${root} h2{font-size:26px;line-height:1.2;font-weight:500;margin:8px 0 20px;max-width:600px}#${root} h3{font-size:16px;font-weight:500;margin:0}#${root} p{margin:8px 0}#${root} .dc-context{max-width:660px;white-space:pre-wrap;margin:0 0 20px}#${root} .dc-scope{color:var(--dc-muted);font-size:12px;padding-right:90px}#${root} .dc-line{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#${root} .dc-finding{padding:20px 0;border-top:1px solid var(--dc-line)}#${root} .dc-assurance{font-size:12px;color:var(--dc-muted);text-transform:uppercase;letter-spacing:.06em}#${root} .dc-flow{list-style:none;display:flex;margin:14px 0;padding:0;gap:8px;align-items:stretch}#${root} .dc-flow li{position:relative;background:var(--dc-soft);flex:1;padding:12px 14px;border-radius:6px;overflow-wrap:anywhere}#${root} .dc-flow li+li:before{content:'→';position:absolute;left:-9px;color:var(--dc-fg)}#${root} summary{font-size:12px;color:var(--dc-muted);min-height:32px;cursor:inherit}#${root} details[open] summary{color:var(--dc-fg)}#${root} .dc-source{padding:10px 0;border-top:1px solid var(--dc-line)}#${root} .dc-excerpt{white-space:pre-wrap;overflow-wrap:anywhere}#${root} .dc-source code{display:block;font-size:12px;color:var(--dc-muted);overflow-wrap:anywhere;white-space:normal}#${root} strong{font-weight:500}#${root} .dc-next{padding:12px 0;border-top:1px solid var(--dc-line);margin-top:4px}#${root} .dc-next span{color:var(--dc-muted);font-size:12px}#${root} .dc-next p{font-weight:400;margin-bottom:0}@media(max-width:500px){#${root}{padding:16px}#${root} .dc-flow{flex-direction:column}#${root} .dc-flow li+li:before{content:'↓';left:14px;top:-13px}#${root} .dc-context{max-width:660px;white-space:pre-wrap;margin:0 0 20px}#${root} .dc-scope{padding-right:0}#${root} h2{font-size:23px}}
+${reportFonts}
+#${root}{--dc-bg:light-dark(#FFFFFF,#1B1C1F);--dc-fg:light-dark(#131416,#FAFAFA);--dc-muted:light-dark(#56585F,#ADB0B8);--dc-line:light-dark(#E5E5E8,#35363A);--dc-soft:light-dark(#E5FAE9,#142C19);color:var(--dc-fg);background:var(--dc-bg);font:400 14px/1.55 "Whodunit DM Sans",sans-serif;padding:30px;border:1px solid var(--dc-line);border-radius:18px;box-sizing:border-box;color-scheme:inherit;box-shadow:0 12px 25px #13141608}
+#${root} *{box-sizing:border-box}#${root} h2{font-size:32px;line-height:1.2;font-weight:700;letter-spacing:-.04em;margin:8px 0 20px;max-width:720px}#${root} h3{font-size:16px;font-weight:600;margin:0}#${root} p{margin:8px 0}#${root} .dc-context{max-width:660px;white-space:pre-wrap;margin:0 0 20px}#${root} .dc-scope{color:var(--dc-muted);font:10px/1.6 "Whodunit DM Mono",monospace}#${root} .dc-line{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#${root} .dc-finding{padding:20px 0;border-top:1px solid var(--dc-line)}#${root} .dc-assurance{font-size:12px;color:var(--dc-muted);}#${root} .dc-flow{list-style:none;display:flex;margin:14px 0;padding:0;gap:8px;align-items:stretch}#${root} .dc-flow li{position:relative;background:var(--dc-soft);flex:1;padding:12px 14px;border-radius:6px;overflow-wrap:anywhere}#${root} .dc-flow li+li:before{content:'→';position:absolute;left:-9px;color:var(--dc-fg)}#${root} summary{font-size:12px;color:var(--dc-muted);min-height:32px;cursor:pointer}#${root} details[open] summary{color:var(--dc-fg)}#${root} .dc-source{padding:10px 0;border-top:1px solid var(--dc-line)}#${root} .dc-excerpt{white-space:pre-wrap;overflow-wrap:anywhere}#${root} .dc-source-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}#${root} .dc-locator{display:block;margin:4px 0 8px;font:11px/1.5 "Whodunit DM Mono",monospace;color:var(--dc-muted);overflow-wrap:anywhere;white-space:normal}#${root} .dc-code{margin:8px 0;padding:12px;border:1px solid var(--dc-line);border-radius:8px;background:var(--dc-soft);white-space:pre-wrap;overflow-wrap:anywhere}#${root} .dc-code code{font:12px/1.6 "Whodunit DM Mono",monospace}#${root} a{color:inherit;text-decoration:none}#${root} a:hover{color:var(--dg-cause)}#${root} a:focus-visible{outline:2px solid var(--dg-cause);outline-offset:4px}#${root} .dc-icon{width:13px;height:13px;flex-shrink:0}#${root} .dc-brand a{display:inline-flex;align-items:center;gap:5px}#${root} strong{font-weight:600}#${root} .dc-next{padding:12px 0;border-top:1px solid var(--dc-line);margin-top:4px}#${root} .dc-next span{color:var(--dc-muted);font-size:12px}#${root} .dc-next p{font-weight:400;margin-bottom:0}@media(max-width:500px){#${root}{padding:16px}#${root} .dc-flow{flex-direction:column}#${root} .dc-flow li+li:before{content:'↓';left:14px;top:-13px}#${root} .dc-context{max-width:660px;white-space:pre-wrap;margin:0 0 20px}#${root} .dc-scope{padding-right:0}#${root} h2{font-size:23px}}
 </style>
 <style>
-#${root} .dc-cause{max-width:680px}#${root} .dc-check-heading{margin:24px 0 10px}#${root} .dc-checks{width:100%;border-collapse:collapse;table-layout:fixed}#${root} .dc-checks th{font-weight:500;text-align:left;color:var(--dc-muted);font-size:12px}#${root} .dc-checks th,#${root} .dc-checks td{padding:12px 8px 12px 0;vertical-align:top;overflow-wrap:anywhere;border-bottom:1px solid var(--dc-line)}#${root} .dc-checks th:first-child{width:34%}#${root} .dc-verdict{font-size:12px;color:var(--dc-muted)}#${root} .dc-checks summary{padding-top:8px}
+#${root} .dc-cause{max-width:680px}#${root} .dc-check-heading{margin:24px 0 10px}#${root} .dc-checks{width:100%;border-collapse:collapse;table-layout:fixed}#${root} .dc-checks th{font-weight:500;text-align:left;color:var(--dc-muted);font-size:12px}#${root} .dc-checks th,#${root} .dc-checks td{padding:16px 8px 16px 0;vertical-align:top;overflow-wrap:anywhere;border-bottom:1px solid var(--dc-line)}#${root} .dc-checks th:first-child{width:30%}#${root} .dc-verdict{font-size:12px;color:var(--dc-muted)}#${root} .dc-checks summary{padding-top:8px}
 </style>
 <div class="dc-scope">${e(card.scope)}</div><h2>${e(card.title)}</h2><p class="dc-context">${e(context)}</p>${analysis}${relatedHtml}${card.nextCheck ? `<div class="dc-next"><span>If useful</span><p>${e(card.nextCheck)}</p></div>` : ""}
-<footer class="dc-brand" style="margin-top:20px;padding-top:12px;border-top:1px solid var(--dc-line);font-size:12px;color:var(--dc-muted)">Fix and prevent production issues with <a style="color:inherit" href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=report" target="_blank" rel="noopener noreferrer">Polylane ↗</a></footer>
+<footer class="dc-brand" style="margin-top:20px;padding-top:12px;border-top:1px solid var(--dc-line);font-size:12px;color:var(--dc-muted)">Fix and prevent production issues with <a style="color:inherit" href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=report" target="_blank" rel="noopener noreferrer">Polylane ${externalIcon}</a></footer>
 </section>\n`;
 }
 
@@ -410,7 +432,7 @@ export function renderDebugDocument(input: unknown): string {
     (match) =>
       `'sha256-${createHash("sha256").update(match[1]!).digest("base64")}'`,
   );
-  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; ${scripts.length ? `script-src ${scripts.join(" ")}; ` : ""}base-uri 'none'; form-action 'none'"><title>${escapeHtml(card.title)}</title><style>body{margin:24px auto;padding:0 16px;max-width:960px;color-scheme:light dark;font-family:system-ui,sans-serif}*{box-sizing:border-box}</style></head><body>${fragment}</body></html>\n`;
+  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src data:; ${scripts.length ? `script-src ${scripts.join(" ")}; ` : ""}base-uri 'none'; form-action 'none'"><title>${escapeHtml(card.title)}</title><style>body{margin:24px auto;padding:0 16px;max-width:960px;color-scheme:light dark;font-family:system-ui,sans-serif}*{box-sizing:border-box}</style></head><body>${fragment}</body></html>\n`;
 }
 
 export function renderTerminalSummary(

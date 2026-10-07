@@ -1,0 +1,29 @@
+{
+  "name": "@coreplane/whodunit",
+  "version": "0.1.1",
+  "description": "Trace local failures through code, relevant history and agent context.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "whodunit": "bin/whodunit.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./skill/whodunit/scripts/lib/index.d.ts",
+      "import": "./skill/whodunit/scripts/lib/index.js"
+    }
+  },
+  "files": ["bin", "skill/whodunit", "README.md", "THIRD_PARTY.md"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coreplanelabs/whodunit.git"
+  },
+  "homepage": "https://debug.polycorp.foo",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  }
+}

@@ -3,12 +3,15 @@ import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSy
 import { dirname, join, relative, resolve, sep } from "node:path";
 const owner = "@coreplane/whodunit", receiptName = ".local-debug-install.json";
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
-export function targetPaths(agent) {
-    return agent === "claude"
-        ? [".claude/skills/whodunit"]
-        : agent === "all"
-            ? [".agents/skills/whodunit", ".claude/skills/whodunit"]
-            : [".agents/skills/whodunit"];
+export function targetPaths(agent, scope = "project") {
+    const paths = {
+        codex: ".agents/skills/whodunit",
+        claude: ".claude/skills/whodunit",
+        opencode: scope === "user"
+            ? ".config/opencode/skills/whodunit"
+            : ".opencode/skills/whodunit",
+    };
+    return agent === "all" ? Object.values(paths) : [paths[agent]];
 }
 export function validateOwned(receipt, actual) {
     if (!receipt || typeof receipt !== "object")
@@ -53,23 +56,23 @@ function fileNames(directory, prefix = "") {
 function safeParents(root, path) {
     const rel = relative(root, path);
     if (rel.startsWith("..") || rel.startsWith(sep))
-        throw Error("Install paths must stay inside the selected project.");
+        throw Error("Install paths must stay inside the selected install directory.");
     let current = root;
     for (const part of rel.split(sep)) {
         current = join(current, part);
         if (existsSync(current)) {
             const stat = lstatSync(current);
             if (stat.isSymbolicLink() || !stat.isDirectory())
-                throw Error("An install path is a symlink or non-directory; choose a project-local directory.");
+                throw Error("An install path is a symlink or non-directory; choose a regular directory.");
         }
     }
 }
-export function installSkill(project, source, version, agent = "all") {
+export function installSkill(project, source, version, agent = "all", scope = "project") {
     const root = realpathSync(resolve(project)), sourceFiles = files(source);
     if (!sourceFiles.has("SKILL.md"))
         throw Error("The package is missing its skill.");
     const hashes = Object.fromEntries([...sourceFiles].map(([name, bytes]) => [name, digest(bytes)]));
-    const targets = targetPaths(agent).map((path) => join(root, path));
+    const targets = targetPaths(agent, scope).map((path) => join(root, path));
     const pending = [];
     for (const target of targets) {
         safeParents(root, target);

@@ -33,8 +33,9 @@ jobs:
       - run: npm install --global npm@11.15.0
       - run: bun install --frozen-lockfile
       - run: bun run verify
-      - run: git diff --exit-code -- skill/whodunit/scripts/lib
+      - run: git diff --exit-code -- src/report-assets.ts skill/whodunit/scripts/lib skill/whodunit/assets
       - run: node scripts/install-smoke.mjs
+      - run: node scripts/npx-smoke.mjs
       - run: node scripts/inline-smoke.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -42,11 +43,11 @@ jobs:
           path: coreplane-whodunit-*.tgz
       - name: Verify release version
         if: github.event_name == 'release' || inputs.prepare_only == false
-        run: node -e "const p=require('./package.json');if(process.env.GITHUB_REF!=='refs/tags/v'+p.version)throw Error('Release tag must match the package version')"
+        run: node -e "const p=require('./package.manifest.json');if(process.env.GITHUB_REF!=='refs/tags/v'+p.version)throw Error('Release tag must match the package version')"
       - name: Check registry publication
         id: publication
         if: github.event_name == 'release' || inputs.prepare_only == false
         run: bun scripts/publication-status.ts
       - name: Publish the verified artifact
         if: (github.event_name == 'release' || inputs.prepare_only == false) && steps.publication.outputs.published != 'true'
-        run: npm publish ./coreplane-whodunit-$(node -p "require('./package.json').version").tgz --access public --provenance
+        run: npm publish ./coreplane-whodunit-$(node -p "require('./package.manifest.json').version").tgz --access public --provenance
