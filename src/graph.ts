@@ -23,6 +23,81 @@ const escapeHtml = (text: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
+export interface GraphGeometry {
+  width: number;
+  vertical: boolean;
+  nodes: Record<
+    string,
+    { left: number; right: number; top: number; bottom: number }
+  >;
+  edges: DebugGraph["edges"];
+}
+
+// Self-contained: the report embeds this function in its local graph script.
+export function routeGraphEdge(
+  edge: DebugGraph["edges"][number],
+  geometry: GraphGeometry,
+): string {
+  const a = geometry.nodes[edge.from]!,
+    b = geometry.nodes[edge.to]!;
+  if (geometry.vertical && (a.bottom <= b.top || b.bottom <= a.top)) {
+    const down = b.top >= a.bottom,
+      x = (a.left + a.right) / 2,
+      y = down ? a.bottom : a.top,
+      t = down ? b.top : b.bottom,
+      incoming = geometry.edges.filter((e) => e.to === edge.to),
+      port = incoming.findIndex((e) => e.from === edge.from),
+      u = b.left + ((b.right - b.left) * (port + 1)) / (incoming.length + 1),
+      blocked = Object.entries(geometry.nodes).some(
+        ([id, r]) =>
+          id !== edge.from &&
+          id !== edge.to &&
+          r.top < Math.max(y, t) &&
+          r.bottom > Math.min(y, t) &&
+          r.left < Math.max(x, u) + 2 &&
+          r.right > Math.min(x, u) - 2,
+      );
+    if (blocked) {
+      const side = edge.kind === "contradicts" ? 6 : geometry.width - 6,
+        sign = down ? 1 : -1;
+      return `M ${x} ${y} L ${x} ${y + sign * 12} L ${side} ${y + sign * 12} L ${side} ${t - sign * 12} L ${u} ${t - sign * 12} L ${u} ${t}`;
+    }
+    const mid = (y + t) / 2;
+    return `M ${x} ${y} C ${x} ${mid} ${u} ${mid} ${u} ${t}`;
+  }
+  const forward = b.left > a.left,
+    x = forward ? a.right : a.left,
+    y = (a.top + a.bottom) / 2,
+    t = forward ? b.left : b.right,
+    u = (b.top + b.bottom) / 2,
+    mid = (x + t) / 2;
+  if (Math.abs(a.left - b.left) < 5) {
+    const down = b.top > a.top,
+      center = (a.left + a.right) / 2,
+      start = down ? a.bottom : a.top,
+      end = down ? b.top : b.bottom,
+      side = edge.kind === "contradicts" ? 6 : geometry.width - 6,
+      sign = down ? 1 : -1;
+    return `M ${center} ${start} L ${center} ${start + sign * 12} L ${side} ${start + sign * 12} L ${side} ${end - sign * 12} L ${center} ${end - sign * 12} L ${center} ${end}`;
+  }
+  const blocked = Object.entries(geometry.nodes).some(
+    ([id, r]) =>
+      id !== edge.from &&
+      id !== edge.to &&
+      r.left < Math.max(x, t) &&
+      r.right > Math.min(x, t) &&
+      r.top < Math.max(y, u) + 2 &&
+      r.bottom > Math.min(y, u) - 2,
+  );
+  if (blocked) {
+    const sign = forward ? 1 : -1,
+      floor =
+        Math.max(...Object.values(geometry.nodes).map((r) => r.bottom)) + 10;
+    return `M ${x} ${y} L ${x + sign * 10} ${y} L ${x + sign * 10} ${floor} L ${t - sign * 10} ${floor} L ${t - sign * 10} ${u} L ${t} ${u}`;
+  }
+  return `M ${x} ${y} C ${mid} ${y} ${mid} ${u} ${t} ${u}`;
+}
+
 export function renderGraph(
   graph: DebugGraph,
   root: string,
@@ -58,22 +133,19 @@ export function renderGraph(
 <div class="dg-inspector" aria-live="polite">${panels}</div>
 <style>
 #${root}{--dg-cause:light-dark(#146C24,#3FF35D);--dg-against:light-dark(#8047AB,#AB69EB)}
-#${root} .dg-report{margin:22px 0}#${root} .dg-legend{display:flex;gap:18px;flex-wrap:wrap;color:var(--dc-muted);font-size:12px;margin:12px 0}#${root} .dg-legend span{display:flex;align-items:center;gap:7px}#${root} .dg-legend i{display:inline-block;width:20px;border-top:2px solid var(--dg-cause)}#${root} .dg-legend .dg-support{border-top-style:dotted}#${root} .dg-legend .dg-against{border-color:var(--dg-against);border-top-style:dashed}
-#${root} .dg-map{position:relative;padding:18px 26px}#${root} .dg-links{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}#${root} .dg-grid{position:relative;display:grid;grid-template-columns:repeat(var(--dg-columns),minmax(0,1fr));gap:34px;align-items:center}#${root} .dg-column{display:flex;flex-direction:column;gap:28px}#${root} .dg-node{position:relative;width:100%;min-height:82px;text-align:left;padding:15px 12px;font:inherit;color:var(--dc-fg);background:var(--dc-soft);border:1px solid var(--dc-line);border-radius:10px;overflow-wrap:anywhere;cursor:pointer}#${root} .dg-node[aria-pressed=true]{border-color:var(--dg-cause);background:var(--dc-bg);box-shadow:0 0 0 2px color-mix(in srgb,var(--dg-cause) 15%,transparent)}#${root} .dg-inspector{margin-top:12px;border-left:2px solid var(--dg-cause);padding:0 14px}#${root} .dg-inspector [hidden]{display:none}#${root} .dg-link{fill:none;stroke:var(--dg-cause);stroke-width:1.6}#${root} .dg-link[data-kind=contradicts]{stroke:var(--dg-against);stroke-dasharray:5 4}#${root} .dg-link[data-kind=supports]{stroke-dasharray:2 3}
-@media(max-width:600px){#${root} .dg-grid{grid-template-columns:1fr;gap:28px}#${root} .dg-column{gap:28px}#${root} .dg-map{padding:14px 30px}}
+#${root} .dg-report{margin:22px 0;container-type:inline-size;container-name:whodunit-graph}#${root} .dg-legend{display:flex;gap:18px;flex-wrap:wrap;color:var(--dc-muted);font-size:12px;margin:12px 0}#${root} .dg-legend span{display:flex;align-items:center;gap:7px}#${root} .dg-legend i{display:inline-block;width:20px;border-top:2px solid var(--dg-cause)}#${root} .dg-legend .dg-support{border-top-style:dotted}#${root} .dg-legend .dg-against{border-color:var(--dg-against);border-top-style:dashed}
+#${root} .dg-map{--dg-vertical:0;position:relative;padding:18px 16px}#${root} .dg-links{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}#${root} .dg-grid{position:relative;display:grid;grid-template-columns:repeat(var(--dg-columns),minmax(0,1fr));gap:34px;align-items:center}#${root} .dg-column{display:flex;flex-direction:column;gap:28px}#${root} .dg-node{position:relative;width:100%;min-height:82px;text-align:left;padding:15px 12px;font:inherit;color:var(--dc-fg);background:var(--dc-soft);border:1px solid var(--dc-line);border-radius:10px;overflow-wrap:anywhere;cursor:pointer}#${root} .dg-node[aria-pressed=true]{border-color:var(--dg-cause);background:var(--dc-bg);box-shadow:0 0 0 2px color-mix(in srgb,var(--dg-cause) 15%,transparent)}#${root} .dg-inspector{margin-top:12px;border-left:2px solid var(--dg-cause);padding:0 14px}#${root} .dg-inspector [hidden]{display:none}#${root} .dg-link{fill:none;stroke:var(--dg-cause);stroke-width:1.6}#${root} .dg-link[data-kind=contradicts]{stroke:var(--dg-against);stroke-dasharray:5 4}#${root} .dg-link[data-kind=supports]{stroke-dasharray:2 3}
+@container whodunit-graph (max-width:600px){#${root} .dg-grid{grid-template-columns:1fr;gap:32px}#${root} .dg-column{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}#${root} .dg-column>.dg-node:last-child:nth-child(odd){grid-column:1 / -1}#${root} .dg-map{--dg-vertical:1;padding:12px 16px}#${root} .dg-node{min-height:64px;padding:12px 10px;font-size:13px}}
 </style>
 <script>
 (()=>{
  const root=document.getElementById('${root}');if(!root)return;
  const map=root.querySelector('.dg-map'),svg=map.querySelector('svg'),paths=svg.querySelector('.dg-paths'),edges=${data};
  const nodes=Array.from(root.querySelectorAll('[data-node]')),panels=Array.from(root.querySelectorAll('[data-panel]'));
- const byId=new Map(nodes.map(n=>[n.dataset.node,n]));
+ const route=${routeGraphEdge.toString()};
  const draw=()=>{const box=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+box.width+' '+box.height);paths.replaceChildren();
- edges.forEach(edge=>{const a=byId.get(edge.from).getBoundingClientRect(),b=byId.get(edge.to).getBoundingClientRect();let d;
- if(Math.abs(a.left-b.left)<5&&edge.kind==='causes'){const x=a.left+a.width/2-box.left,y=b.top>a.top?a.bottom-box.top:a.top-box.top,t=b.top>a.top?b.top-box.top:b.bottom-box.top;d='M '+x+' '+y+' L '+x+' '+t;}
- else if(Math.abs(a.left-b.left)<5){const down=b.top>a.top,x=a.left+a.width/2-box.left,y=down?a.bottom-box.top:a.top-box.top,t=down?b.top-box.top:b.bottom-box.top,side=edge.kind==='contradicts'?10:box.width-10,sign=down?1:-1;d='M '+x+' '+y+' C '+x+' '+(y+sign*10)+' '+side+' '+(y+sign*10)+' '+side+' '+(y+sign*18)+' L '+side+' '+(t-sign*18)+' C '+side+' '+(t-sign*10)+' '+x+' '+(t-sign*10)+' '+x+' '+t;}
- else if(edge.kind==='contradicts'){const x=a.right-box.left,y=a.top+a.height/2-box.top,t=b.left+b.width/2-box.left,u=b.bottom-box.top,floor=Math.max(a.bottom,b.bottom)-box.top+12;d='M '+x+' '+y+' C '+(x+30)+' '+floor+' '+t+' '+floor+' '+t+' '+u;}
- else{const forward=b.left>a.left,x=forward?a.right-box.left:a.left-box.left,y=a.top+a.height/2-box.top,t=forward?b.left-box.left:b.right-box.left,u=b.top+b.height/2-box.top,m=(x+t)/2;d='M '+x+' '+y+' C '+m+' '+y+' '+m+' '+u+' '+t+' '+u;}
+ const geometry={width:box.width,vertical:getComputedStyle(map).getPropertyValue('--dg-vertical').trim()==='1',edges,nodes:Object.fromEntries(nodes.map(node=>{const r=node.getBoundingClientRect();return [node.dataset.node,{left:r.left-box.left,right:r.right-box.left,top:r.top-box.top,bottom:r.bottom-box.top}];}))};
+ edges.forEach(edge=>{const d=route(edge,geometry);
  const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',d);path.setAttribute('class','dg-link');path.dataset.kind=edge.kind;path.setAttribute('marker-end','url(#${root}-arrow)');paths.append(path);});};
  nodes.forEach(node=>node.addEventListener('click',()=>{nodes.forEach(n=>n.setAttribute('aria-pressed',String(n===node)));panels.forEach(p=>p.hidden=p.dataset.panel!==node.dataset.node);}));
  if(typeof ResizeObserver!=='undefined')new ResizeObserver(draw).observe(map);else window.addEventListener('resize',draw);draw();
