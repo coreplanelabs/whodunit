@@ -36,6 +36,7 @@ function safeRepositoryPath(path: string): boolean {
 export function safeLocalPath(path: string): boolean {
   return (
     safeRepositoryPath(path) &&
+    !/(?:^|\/)\.local-debug\/backups(?:\/|$)/u.test(path) &&
     /\.(?:[cm]?js|jsx|tsx?|py|rs|go|java|rb|sh|css|html|sql)$/iu.test(path)
   );
 }
