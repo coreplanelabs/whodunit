@@ -63,11 +63,6 @@ assert.ok(
 assert.ok(html.includes("Suggested fix"));
 assert.ok(html.includes('class="dc-brand"'));
 assert.ok(html.includes("Fix and prevent production issues with"));
-assert.ok(
-  !html.includes("sendFollowUpMessage") &&
-    !html.includes("Enable auto-fix") &&
-    !html.includes('class="dc-actions"'),
-);
 for (const label of ["Codex", "Claude Code", "OpenCode"])
   assert.ok(html.includes(`alt="${label}" title="${label}"`));
 assert.ok(!/__\w+__/u.test(html), "Unresolved site template value");

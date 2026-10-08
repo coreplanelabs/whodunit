@@ -26,9 +26,9 @@ Ask your agent what went wrong, or invoke the skill directly:
 
 Claude Code uses `/whodunit`; Codex supports `$whodunit`. In any supported client, you can ask: “Use Whodunit to investigate why login stopped working.” Give the actual symptom or error. You do not need to tell the agent to read a skill-file path.
 
-Whodunit finds and shows the problem before fixing it. By default it stops at the problem card. Choose Fix it to try a local repair, or enable auto-fix to skip that pause on later uses. Auto-fix still shows the problem before changes and records the result afterward.
+Whodunit finds and shows the problem before fixing it. By default it stops at the problem card. Reply yes to try a local repair, no to keep the report, or always to enable auto-fix and try the current fix. Auto-fix skips that pause on later uses. Auto-fix still shows the problem before changes and records the result afterward.
 
-Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves the report in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report. A short suggested fix appears before the fix choice. Clients with confirmed native follow-up support can show fix actions below the visual. Some Codex builds display these as plain labels; use the text question in those builds. Other clients ask in the conversation: yes, no, or always. The same text question is the fallback if buttons are unavailable or fail. The report has no embedded agent controls. Saved browser reports have no fix controls. The terminal asks whether you want a fix.
+Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves it in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. The same report contains current evidence and relevant history. A short suggested fix appears before the fix choice. The coding agent asks in text: yes, no, or always. The report does not send messages or run repairs.
 
 ## Auto-fix
 

@@ -1,48 +1,8 @@
 import { expect, test } from "bun:test";
-import { nativeFollowups, terminalFixQuestion } from "../src/actions.js";
-import {
-  parseDebugCard,
-  renderDebugCard,
-  renderDebugDocument,
-} from "../src/card.js";
+import { terminalFixQuestion } from "../src/actions.js";
+import { parseDebugCard, renderDebugCard } from "../src/card.js";
 import { dispatchCli } from "../src/cli-api.js";
 
-test("native actions carry scoped prompts with safely quoted report paths", () => {
-  const output = nativeFollowups({
-    reportPath: '/chosen/a"} :codex-followup[wrong]{prompt="b.json',
-  });
-  const lines = output.trim().split("\n");
-  expect(lines).toHaveLength(3);
-  const messages = lines.map((line) => {
-    const match = line.match(
-      /^- :codex-followup\[([^\]]+)\]\{prompt=("(?:[^"\\]|\\.)*")\}$/u,
-    );
-    expect(match).not.toBeNull();
-    return { label: match![1], prompt: JSON.parse(match![2]!) };
-  });
-  expect(messages[0]!.label).toBe("Fix it");
-  expect(messages[0]!.prompt).toContain("preserve other changes");
-  expect(messages[1]!.label).toBe("Report only");
-  expect(messages[1]!.prompt).toContain("Do not edit files");
-  expect(messages[2]!.label).toBe("Fix and enable auto-fix");
-  expect(messages[2]!.prompt).toContain("read it back");
-  expect(messages[2]!.prompt).toContain("Then handle this local request");
-  expect(nativeFollowups({ autoFix: true })).toContain("Turn off auto-fix");
-  expect(() => nativeFollowups({ reportPath: "bad\nfile" })).toThrow();
-});
-test("HTML reports show the suggestion without embedded agent controls", () => {
-  const data = { ...report, suggestedFix: "Check the setting name." };
-  for (const html of [
-    renderDebugCard(data),
-    renderDebugCard(data, { delivery: "inline" }),
-    renderDebugDocument(data),
-  ]) {
-    expect(html).toContain("Suggested fix");
-    expect(html).not.toContain("Fix options");
-    expect(html).not.toContain("sendFollowUpMessage");
-    expect(html).not.toContain("Copy request");
-  }
-});
 const report = {
   schemaVersion: "debug-card/1",
   title: "Cause unknown",
@@ -92,7 +52,7 @@ test("corrupt preferences still permit a report but require asking before a fix"
   expect(await dispatchCli(["card", "report.json"], io)).toBe(0);
   expect(output).toContain("I could not read the auto-fix setting");
 });
-test("recorded changes need direct evidence and change the action to a check", () => {
+test("recorded changes need direct evidence and change the question to a check", () => {
   const changed = {
     ...report,
     repair: {
@@ -113,10 +73,10 @@ test("recorded changes need direct evidence and change the action to a check", (
   expect(() => parseDebugCard(changed)).toThrow("direct-read");
   changed.sources[0]!.origin = "direct_read";
   expect(
-    nativeFollowups({
+    terminalFixQuestion({
       changesRecorded: parseDebugCard(changed).repair?.status === "changed",
     }),
-  ).toContain("Check the fix");
+  ).toContain("check the fix");
   expect(renderDebugCard(changed)).toContain("What changed");
 });
 

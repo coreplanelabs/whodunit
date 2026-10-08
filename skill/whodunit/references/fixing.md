@@ -23,7 +23,7 @@ node <skill-directory>/scripts/triage.mjs settings auto-fix on
 node <skill-directory>/scripts/triage.mjs settings auto-fix off
 ```
 
-“Always” and “Fix and enable auto-fix” mean save `on`, then try the current local fix. A request to change the saved choice only does not start a fix. Read the setting back before claiming it was saved.
+“Always” means save `on`, then try the current local fix. A request to change the saved choice only does not start a fix. Read the setting back before claiming it was saved.
 
 With auto-fix off and no fix already requested, show the problem card and end the turn before a repair. With auto-fix on, show the problem and planned change first, then try the local fix without another approval pause. Use an interim card if supported; otherwise give a short visible explanation before editing and include the result in the final card. Run relevant tests. The user's current request takes precedence: “report only” means no edits for that use. The saved choice does not grant permission to publish, deploy, delete user data, change credentials, contact or interrupt other agents, or bypass existing approval gates. If an active writer owns the affected work, retain that writer and ask for a handoff rather than making competing edits.
 
@@ -37,10 +37,8 @@ When changes were made, add `repair` to the report:
 {"repair":{"status":"changed","summary":"Changed the reader to use the current setting. The selected test passes.","sourceIds":["diff","test"]}}
 ```
 
-`changed` requires direct-read sources. It records code changes, not a guarantee of recovery. If the fix needs evidence or permission, use `status: "blocked"` and explain what is missing. `summary` is limited to 400 characters. The report shows the result and offers “Check the fix” when changes were recorded.
+`changed` requires direct-read sources. It records code changes, not a guarantee of recovery. If the fix needs evidence or permission, use `status: "blocked"` and explain what is missing. `summary` is limited to 400 characters. The report shows the result. The helper asks whether to check the fix when changes were recorded.
 
-## Buttons by client
+## Conversation delivery
 
-Use `--inline --actions` only when the client is confirmed to render and submit `codex-followup` actions. Naming the syntax in supplied instructions does not prove that it works in the current build. Some Codex builds flatten these actions to plain labels. If actions appear as labels, fail when clicked, or support is unknown, use `--inline` without `--actions` and ask the same yes/no/always question in text. They use the client's own conversation flow, not HTML controls. The agent uses its normal tools to handle the request and report the result. A request does not prove a fix or preference write completed.
-
-Saved browser reports have no fix or auto-fix controls. The coding agent asks in the terminal, waits for the reply, then acts. Other visual clients ask through an available native question tool or in the conversation. No separate agent SDK is required. Do not add embedded agent controls, copy panels, or request text boxes.
+Ask the fix question in text after the report. End the turn and wait when auto-fix is off. Do not add a separate list of fix choices. The coding agent handles the reply with its normal tools. A saved browser report is evidence; the repair stays in the coding agent's conversation.

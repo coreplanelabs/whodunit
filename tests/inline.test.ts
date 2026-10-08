@@ -53,25 +53,13 @@ test("inline delivery returns the saved fragment's reference and fails without o
     },
   };
   expect(
-    await dispatchCli(
-      ["card", "/worklog/report.json", "--inline", "--actions"],
-      io,
-    ),
+    await dispatchCli(["card", "/worklog/report.json", "--inline"], io),
   ).toBe(0);
   expect(out).toStartWith(`visualize${JSON.stringify({ path })}\n\n`);
-  expect(out).toContain(":codex-followup[Fix it]");
   expect(out).toContain("Reply yes, no, or always");
-  expect(out).toContain("/worklog/report.json");
-  expect(out).toContain(":codex-followup[Fix and enable auto-fix]");
   expect(fragment.startsWith("<section")).toBe(true);
   expect(fragment).not.toContain("<!doctype");
   expect(error).toBe("");
-  out = "";
-  expect(
-    await dispatchCli(["card", "/worklog/report.json", "--inline"], io),
-  ).toBe(0);
-  expect(out).not.toContain(":codex-followup[");
-  expect(out).toContain("Reply yes, no, or always");
   out = "";
   expect(
     await dispatchCli(["card", "report.json", "--inline"], {
