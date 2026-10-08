@@ -26,6 +26,8 @@ Ask your agent what went wrong, or invoke the skill directly:
 
 Claude Code uses `/whodunit`; Codex supports `$whodunit`. In any supported client, you can ask: “Use Whodunit to investigate why login stopped working.” Give the actual symptom or error. You do not need to tell the agent to read a skill-file path.
 
+Whodunit finds and shows the problem before fixing it. By default it stops at the problem card. Choose Fix it to try a local repair, or enable auto-fix to skip that pause on later uses. Auto-fix still shows the problem before changes and records the result afterward.
+
 Supported visual clients get a concise report with selectable graph nodes and sources. Codex's inline helper saves the report in the current chat's allowed visualization folder. Terminals get a short summary plus a saved local browser report. Context and change-history evidence stay in the same report. A short suggested fix appears above the controls. When the client supports them, Codex shows native fix actions below the visual. Other clients ask in the conversation: yes, no, or always. The same text question is the fallback if buttons are unavailable or fail. The report has no embedded agent controls. Saved browser reports have no fix controls. The terminal asks whether you want a fix.
 
 ## Auto-fix

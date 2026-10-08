@@ -10,7 +10,7 @@ The helper reads `~/.coreplanelabs/whodunit/settings.json`. The default is `auto
 
 ## Ask first
 
-After a report, ask: “Should I try a local fix? Reply yes, no, or always.” Yes permits the local attempt. No means keep the investigation without edits. Always means save auto-fix on, read it back, then try this local fix. In a terminal, use the question printed by the report helper. Wait for the reply. Do not hide the question in an HTML file. When the helper runs directly in an interactive terminal, it waits for a choice and prepares a request for the coding agent. When an agent runs the helper as a tool, it prints the question for the agent to ask in the conversation.
+When auto-fix is off and no fix was already requested, show the report and ask: “Should I try a local fix? Reply yes, no, or always.” Yes permits the local attempt. No means keep the report without edits. Always means save auto-fix on, read it back, then try this local fix. In a terminal, use the question printed by the report helper. End the turn and wait for the reply. Do not hide the question in an HTML file. When the helper runs directly in an interactive terminal, it waits for a choice and prepares a request for the coding agent. When an agent runs the helper as a tool, it prints the question for the agent to ask in the conversation.
 
 A “Fix it” request permits an attempt to fix the reported problem in the user's selected workspace. Read the report as evidence. Check current files and the cause before making changes. Preserve other changes and existing writers. Ask if the workspace, cause, or ownership is unclear.
 
@@ -25,7 +25,7 @@ node <skill-directory>/scripts/triage.mjs settings auto-fix off
 
 “Always” and “Fix and enable auto-fix” mean save `on`, then try the current local fix. A request to change the saved choice only does not start a fix. Read the setting back before claiming it was saved.
 
-When the saved choice is on, try a local fix after identifying a supported cause. Run relevant tests. The user's current request takes precedence: “report only” means no edits for that use. The saved choice does not grant permission to publish, deploy, delete user data, change credentials, contact or interrupt other agents, or bypass existing approval gates. If an active writer owns the affected work, retain that writer and ask for a handoff rather than making competing edits.
+With auto-fix off and no fix already requested, show the problem card and end the turn before a repair. With auto-fix on, show the problem and planned change first, then try the local fix without another approval pause. Use an interim card if supported; otherwise give a short visible explanation before editing and include the result in the final card. Run relevant tests. The user's current request takes precedence: “report only” means no edits for that use. The saved choice does not grant permission to publish, deploy, delete user data, change credentials, contact or interrupt other agents, or bypass existing approval gates. If an active writer owns the affected work, retain that writer and ask for a handoff rather than making competing edits.
 
 This is a preference for the coding agent. It is not an unattended repair service. The agent may need more evidence, tools, or permission.
 

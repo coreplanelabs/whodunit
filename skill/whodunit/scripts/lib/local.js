@@ -18,6 +18,7 @@ function safeRepositoryPath(path) {
 }
 export function safeLocalPath(path) {
     return (safeRepositoryPath(path) &&
+        !/(?:^|\/)\.local-debug\/backups(?:\/|$)/u.test(path) &&
         /\.(?:[cm]?js|jsx|tsx?|py|rs|go|java|rb|sh|css|html|sql)$/iu.test(path));
 }
 function mentionsPath(text, path, root) {

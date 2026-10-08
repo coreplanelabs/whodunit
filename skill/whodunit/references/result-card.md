@@ -1,6 +1,6 @@
 # A concise report in any client
 
-Make the report self-contained. Put two plain-language sentences of context inside it, followed by a visible root cause or missing evidence, an evidence comparison when useful, change-history evidence within the same checks, and material unknowns. Do not hide the causal explanation in a disclosure or repeat the summary above the report. Suggested checks are optional. Offer a local fix through the conversation. In Codex, keep the native follow-up actions below the report; in other clients, ask with the client's available question tool or in plain chat. Follow [the fix flow](fixing.md). Do not promise recovery or agent ownership from source inspection.
+Make the report self-contained. Put two plain-language sentences of context inside it, followed by a visible root cause or missing evidence, an evidence comparison when useful, change-history evidence within the same checks, and material unknowns. Do not hide the causal explanation in a disclosure or repeat the summary above the report. Suggested checks are optional. With auto-fix off and no fix already requested, show the report and end the turn for a fix choice. With auto-fix on, show the problem before editing, then record the result without another approval pause. In Codex, keep the native follow-up actions below the report; in other clients, ask with the client's available question tool or in plain chat. Follow [the fix flow](fixing.md). Do not promise recovery or agent ownership from source inspection.
 
 ## Choose the display by client capability
 
@@ -86,6 +86,6 @@ For terminal delivery, create a task-owned report directory first, then run:
 node <skill-directory>/scripts/triage.mjs card /absolute/report.json --output /absolute/new-report.html
 ```
 
-The helper creates a new HTML file, prints a short summary and its path, and refuses to overwrite an existing file. Keep the printed fix question at the end. Wait for the user's reply when auto-fix is off. Do not add a long investigation transcript.
+The helper creates a new HTML file, prints a short summary and its path, and refuses to overwrite an existing file. Keep the printed fix question at the end. End the turn and wait for the user's reply when auto-fix is off and no fix was already requested. Do not add a long investigation transcript.
 
 Use [the writing guide](writing.md) for plain language. [Fix choices](fixing.md) describes the saved preference, client controls, and optional `repair` result.

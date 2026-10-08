@@ -136,6 +136,16 @@ test("file and excerpt bounds preserve useful facts and explicit missing coverag
   expect(r.diff.truncated).toBe(true);
   expect(r.gaps.some((g) => g.includes("3 source paths omitted"))).toBe(true);
 });
+test("installer backups do not consume the snapshot source limit", () => {
+  const backups = Array.from(
+    { length: 8 },
+    (_, i) => `.local-debug/backups/install-${i}/scripts/helper.ts`,
+  );
+  const f = fixture({ tracked: [], untracked: [...backups, "src/login.ts"] });
+  const r = collectLocal({ repository: root }, f.io);
+  expect(r.changedFiles.map((p) => p.path)).toEqual(["src/login.ts"]);
+  expect(r.newFiles.map((p) => p.path)).toEqual(["src/login.ts"]);
+});
 test("failed diff, moving HEAD and missing symptom remain gaps rather than cause certainty", () => {
   const f = fixture({ unavailableDiff: true, headChanged: true });
   const r = collectLocal({ repository: root }, f.io);
