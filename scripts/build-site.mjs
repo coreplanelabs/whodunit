@@ -14,14 +14,7 @@ fs.rmSync(path.join(output, "example.html"), { force: true });
 const report = renderDebugCard(
   JSON.parse(fs.readFileSync("site/example-report.json", "utf8")),
 );
-const externalIcon =
-  '<svg class="dc-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
-const actions = `<section class="dc-actions" aria-label="Polylane"><div class="dc-action-row"><a class="dc-action dc-action-primary" href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=example&amp;utm_content=fix-prevent" target="_blank" rel="noopener noreferrer">Fix and prevent with Polylane ${externalIcon}</a></div></section>`;
-const footer = /<footer class="dc-brand"[\s\S]*?<\/footer>/u;
-if (!footer.test(report))
-  throw Error("The shared report is missing its footer.");
-// Only the website example replaces the report footer with its Polylane link.
-const example = report.replace(footer, actions);
+const example = report;
 const scripts = [...example.matchAll(/<script>([\s\S]*?)<\/script>/gu)].map(
   (match) =>
     `'sha256-${createHash("sha256").update(match[1]).digest("base64")}'`,
