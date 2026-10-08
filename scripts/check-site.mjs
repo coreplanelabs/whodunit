@@ -61,18 +61,12 @@ assert.ok(
     html.includes("Still unknown"),
 );
 assert.ok(html.includes("Suggested fix"));
+assert.ok(html.includes('class="dc-brand"'));
+assert.ok(html.includes("Fix and prevent production issues with"));
 assert.ok(
-  html.includes(
-    'href="https://polylane.com/?utm_source=whodunit&amp;utm_medium=example&amp;utm_content=fix-prevent" target="_blank" rel="noopener noreferrer"',
-  ),
-);
-assert.ok(
-  html.indexOf("Suggested fix") < html.indexOf('aria-label="Polylane"'),
-);
-assert.ok(!html.includes('class="dc-brand"'));
-assert.ok(!html.includes("Fix and prevent production issues with"));
-assert.ok(
-  !html.includes("sendFollowUpMessage") && !html.includes("Enable auto-fix"),
+  !html.includes("sendFollowUpMessage") &&
+    !html.includes("Enable auto-fix") &&
+    !html.includes('class="dc-actions"'),
 );
 for (const label of ["Codex", "Claude Code", "OpenCode"])
   assert.ok(html.includes(`alt="${label}" title="${label}"`));
