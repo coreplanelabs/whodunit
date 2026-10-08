@@ -227,7 +227,7 @@ function sourceHtml(source) {
 }
 const externalIcon = '<svg class="dc-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
 // Source locators stay inert. Opening a source or executing a next check requires the host/user.
-export function renderDebugCard(input, _options = {}) {
+export function renderDebugCard(input) {
     const card = parseDebugCard(input);
     const root = `debug-card-${card.findings.map((f) => f.id).join("-") || "rca"}`;
     const e = escapeHtml;
@@ -367,9 +367,9 @@ export function renderDebugText(input, options = {}) {
         : "";
     return `${card.title}\n\n${context}\n\n${analysis}${card.repair ? `\n\n${card.repair.status === "changed" ? "What changed" : "The fix needs your input"}: ${card.repair.summary}` : ""}${graphText}${refs ? `\nEvidence:\n${refs}\n` : ""}${card.nextCheck ? `\nIf useful: ${card.nextCheck}\n` : ""}${card.suggestedFix && card.repair?.status !== "changed" ? `\nSuggested fix: ${card.suggestedFix}\n` : ""}\nFix and prevent production issues: https://polylane.com/?utm_source=whodunit&utm_medium=report\n\n${terminalFixQuestion(options)}\n`;
 }
-export function renderDebugDocument(input, options = {}) {
+export function renderDebugDocument(input) {
     const card = parseDebugCard(input);
-    const fragment = renderDebugCard(card, { ...options, delivery: "browser" });
+    const fragment = renderDebugCard(card);
     const scripts = [...fragment.matchAll(/<script>([\s\S]*?)<\/script>/gu)].map((match) => `'sha256-${createHash("sha256").update(match[1]).digest("base64")}'`);
     return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src data:; ${scripts.length ? `script-src ${scripts.join(" ")}; ` : ""}base-uri 'none'; form-action 'none'"><title>${escapeHtml(card.title)}</title><style>body{margin:24px auto;padding:0 16px;max-width:960px;color-scheme:light dark;font-family:system-ui,sans-serif}*{box-sizing:border-box}</style></head><body>${fragment}</body></html>\n`;
 }

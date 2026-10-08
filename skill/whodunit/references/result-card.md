@@ -1,12 +1,12 @@
 # A concise report in any client
 
-Make the report self-contained. Put two plain-language sentences of context inside it, followed by a visible root cause or missing evidence, an evidence comparison when useful, change-history evidence within the same checks, and material unknowns. Do not hide the causal explanation in a disclosure or repeat the summary above the report. Suggested checks are optional. With auto-fix off and no fix already requested, show the report and end the turn for a fix choice. With auto-fix on, show the problem before editing, then record the result without another approval pause. When native actions are confirmed to work, keep them below the report. Otherwise ask with the client's available question tool or in plain chat. Follow [the fix flow](fixing.md). Do not promise recovery or agent ownership from source inspection.
+Make the report self-contained. Put two plain-language sentences of context inside it, followed by a visible root cause or missing evidence, an evidence comparison when useful, change-history evidence within the same checks, and material unknowns. Do not hide the causal explanation in a disclosure or repeat the summary above the report. Suggested checks are optional. With auto-fix off and no fix already requested, show the report and end the turn for a fix choice. With auto-fix on, show the problem before editing, then record the result without another approval pause. Ask the yes/no/always question in plain chat. Follow [the fix flow](fixing.md). Do not promise recovery or agent ownership from source inspection.
 
 ## Choose the display by client capability
 
 The model provider does not determine the display:
 
-- Codex Desktop: run `card /absolute/report.json --inline --actions` only when this client is confirmed to render and submit `codex-followup` actions; otherwise use `--inline` and ask the returned yes/no/always question. Return the helper's full output. The helper selects the current chat's permitted visualization folder. No separate introductory paragraph is needed.
+- Codex Desktop: run `card /absolute/report.json --inline` and ask the returned yes/no/always question. Return the helper's full output. The helper selects the current chat's permitted visualization folder. No separate introductory paragraph is needed.
 - Other confirmed inline clients: use that client's supported output location and reference. A filesystem path being writable does not prove the display can read it.
 - Terminal: create the local browser report with `card report.json --output /absolute/new-report.html` and return its short terminal summary and path. Keep full evidence in the browser report. Unknown clients without local writing receive concise text. Use ASCII only when a diagram explains a relationship; do not emit HTML or assume Mermaid renders.
 - A saved browser report: generate a self-contained local HTML file when wanted. Do not automatically open it or upload reports to the distribution website.
@@ -23,9 +23,9 @@ node <skill-directory>/scripts/triage.mjs card /absolute/report.json --format ht
 node <skill-directory>/scripts/triage.mjs card /absolute/report.json --inline
 ```
 
-With `--actions`, the inline command writes a fragment, then prints Codex's supported reference and native follow-up actions. The text question stays available even when native actions are shown. If the client shows only labels or the actions fail, omit `--actions` on later reports and return only the text question. Without that flag, it prints the reference and the text fix question. Return both in the final response, with the actions outside the report. Do not put them in a code block. Its output folder comes from `CODEX_THREAD_ID` and `CODEX_HOME` (default `~/.codex`); the date is the thread's creation date, not today's date. It rejects missing or invalid thread context, symlinked directories and oversized fragments before returning a reference. Never use an arbitrary worklog or repository path in a Codex inline reference: Codex may reject it with `Invalid visualization read request` even when the HTML is valid. Keep the input JSON wherever the task permits; let the helper choose the display file's path.
+The inline command writes a fragment, then prints Codex's supported reference and the text fix question. Return both in the final response. Do not add a separate list of fix choices. Its output folder comes from `CODEX_THREAD_ID` and `CODEX_HOME` (default `~/.codex`); the date is the thread's creation date, not today's date. It rejects missing or invalid thread context, symlinked directories and oversized fragments before returning a reference. Never use an arbitrary worklog or repository path in a Codex inline reference: Codex may reject it with `Invalid visualization read request` even when the HTML is valid. Keep the input JSON wherever the task permits; let the helper choose the display file's path.
 
-If Codex host context is unavailable, use the saved browser-report or text route. Other inline clients may use `--format fragment` with their own verified destination. Codex references are not portable to a terminal or another client. The standalone report has no remote resources. Saved reports have no fix controls; the agent asks in the terminal. Confirmed clients can use native follow-up actions in the conversation. Other clients ask through their available question tool or in plain chat. The report itself has no agent buttons. Graph interactions use local scripts permitted by their exact CSP hashes.
+If Codex host context is unavailable, use the saved browser-report or text route. Other inline clients may use `--format fragment` with their own verified destination. Codex references are not portable to a terminal or another client. The standalone report has no remote resources. The coding agent asks the fix question in text, outside the report. Graph interactions use local scripts permitted by their exact CSP hashes.
 
 Illustrative record; this is not evidence about a user's repository:
 
@@ -58,11 +58,11 @@ Illustrative record; this is not evidence about a user's repository:
 }
 ```
 
-Optional `suggestedFix` is at most 240 characters. Use one plain sentence to describe the proposed change and its check. It appears above the fix controls and in terminal output. Keep it optional when the cause is unknown. Do not show a large patch or promise the fix will work. Completed repairs use `repair` instead.
+Optional `suggestedFix` is at most 240 characters. Use one plain sentence to describe the proposed change and its check. It appears before the fix choice and in terminal output. Keep it optional when the cause is unknown. Do not show a large patch or promise the fix will work. Completed repairs use `repair` instead.
 
 `rca.summary` is at most 400 characters. Assurance uses `observed`, `reported`, `hypothesis` or `unknown`; observed RCA and findings require direct-read sources. Optional `checks` contains up to 4 items with an explanation (100), evidence (260), outcome (`supports`, `contradicts`, `unresolved`) and existing source IDs. Only unresolved checks may have no source IDs. Outcomes are investigation judgments, not verification performed by the renderer. Optional `history` contains a summary (400) and existing source IDs; the renderer folds it into the "Which change introduced this?" check. Use this field for a supported change-history finding so the terminal summary can retain it. Optional `gaps` contains 1–3 unknowns (200 each). Missing history or attribution belongs in gaps.
 
-Source origins are `direct_read`, `provided_answer`, `session_statement`, `user_input`. Supplied answers and session statements remain reported. The renderer validates structure, not truth. Context (600) and source excerpts (600) permit normal line breaks/tabs; labels and locators stay on one line. Use optional `format: "code"` for code, diffs or structured configuration excerpts; otherwise sources render as prose. Locators remain inert text. Common secret redaction is incomplete: review evidence before displaying it. The formatter does not investigate or run fixes. Native follow-up actions use the coding client's own conversation flow. Do not use an HTML-to-agent message bridge.
+Source origins are `direct_read`, `provided_answer`, `session_statement`, `user_input`. Supplied answers and session statements remain reported. The renderer validates structure, not truth. Context (600) and source excerpts (600) permit normal line breaks/tabs; labels and locators stay on one line. Use optional `format: "code"` for code, diffs or structured configuration excerpts; otherwise sources render as prose. Locators remain inert text. Common secret redaction is incomplete: review evidence before displaying it. The formatter does not investigate or run fixes. The coding agent handles the fix choice in the conversation.
 
 ## Evaluate usefulness honestly
 
@@ -78,7 +78,7 @@ Example graph field (use the record's own source IDs):
 {"graph":{"title":"Why the value went missing","focusId":"reader","nodes":[{"id":"rename","label":"Setting renamed","detail":"The change renamed the exported setting.","column":0,"assurance":"reported","sourceIds":["source"]},{"id":"reader","label":"Reader uses the old name","detail":"The reader now asks for a setting the export does not provide.","column":1,"assurance":"reported","sourceIds":["source"]}],"edges":[{"from":"rename","to":"reader","kind":"causes"}]}}
 ```
 
-Keep the graphic focused. Use a graph to reveal propagation or conflicting evidence, rather than decorate a sentence. Report context stays inside the report; return its reference and the native actions or text fix question selected for the client. A small footer links to Polylane for production fixes and prevention. Do not upload reports.
+Keep the graphic focused. Use a graph to reveal propagation or conflicting evidence, rather than decorate a sentence. Report context stays inside the report; return its reference and the text fix question. A small footer links to Polylane for production fixes and prevention. Do not upload reports.
 
 For terminal delivery, create a task-owned report directory first, then run:
 
@@ -88,4 +88,4 @@ node <skill-directory>/scripts/triage.mjs card /absolute/report.json --output /a
 
 The helper creates a new HTML file, prints a short summary and its path, and refuses to overwrite an existing file. Keep the printed fix question at the end. End the turn and wait for the user's reply when auto-fix is off and no fix was already requested. Do not add a long investigation transcript.
 
-Use [the writing guide](writing.md) for plain language. [Fix choices](fixing.md) describes the saved preference, client controls, and optional `repair` result.
+Use [the writing guide](writing.md) for plain language. [Fix choices](fixing.md) describes the saved preference, text choices, and optional `repair` result.

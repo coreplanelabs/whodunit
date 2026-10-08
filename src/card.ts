@@ -325,10 +325,7 @@ function sourceHtml(source: DebugCard["sources"][number]): string {
 const externalIcon =
   '<svg class="dc-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
 // Source locators stay inert. Opening a source or executing a next check requires the host/user.
-export function renderDebugCard(
-  input: unknown,
-  _options: ReportOptions = {},
-): string {
+export function renderDebugCard(input: unknown): string {
   const card = parseDebugCard(input);
   const root = `debug-card-${card.findings.map((f) => f.id).join("-") || "rca"}`;
   const e = escapeHtml;
@@ -477,12 +474,9 @@ export function renderDebugText(
     : "";
   return `${card.title}\n\n${context}\n\n${analysis}${card.repair ? `\n\n${card.repair.status === "changed" ? "What changed" : "The fix needs your input"}: ${card.repair.summary}` : ""}${graphText}${refs ? `\nEvidence:\n${refs}\n` : ""}${card.nextCheck ? `\nIf useful: ${card.nextCheck}\n` : ""}${card.suggestedFix && card.repair?.status !== "changed" ? `\nSuggested fix: ${card.suggestedFix}\n` : ""}\nFix and prevent production issues: https://polylane.com/?utm_source=whodunit&utm_medium=report\n\n${terminalFixQuestion(options)}\n`;
 }
-export function renderDebugDocument(
-  input: unknown,
-  options: ReportOptions = {},
-): string {
+export function renderDebugDocument(input: unknown): string {
   const card = parseDebugCard(input);
-  const fragment = renderDebugCard(card, { ...options, delivery: "browser" });
+  const fragment = renderDebugCard(card);
   const scripts = [...fragment.matchAll(/<script>([\s\S]*?)<\/script>/gu)].map(
     (match) =>
       `'sha256-${createHash("sha256").update(match[1]!).digest("base64")}'`,

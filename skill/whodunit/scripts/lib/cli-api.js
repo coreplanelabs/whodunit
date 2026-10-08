@@ -2,7 +2,7 @@ import { closeSync, constants, fstatSync, openSync, readSync, writeFileSync, } f
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
-import { fixRequest, nativeFollowups, terminalFixQuestion, } from "./actions.js";
+import { fixRequest, terminalFixQuestion, } from "./actions.js";
 import { parseDebugCard, renderDebugCard, renderDebugDocument, renderDebugText, renderTerminalSummary, } from "./card.js";
 import { InputError } from "./errors.js";
 import { saveCodexInline } from "./inline.js";
@@ -122,7 +122,7 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
             return 1;
         }
     }
-    const reportOptions = (input, delivery) => {
+    const reportOptions = (input) => {
         if (hasControlCharacters(input))
             throw new InputError("Choose a valid local report path.");
         let autoFix = false;
@@ -136,7 +136,6 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
         }
         return {
             reportPath: resolve(input),
-            delivery,
             autoFix,
             settingsUnavailable,
             interactive: !!io.ask,
@@ -196,13 +195,11 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
         const usage = "whodunit card <report.json> [--format text|html|fragment]\nText is the default; HTML is a standalone local browser report; fragment is for supported inline viewers.\n";
         if (args.length === 2 && args[1] === "--help") {
             io.out(usage +
-                "whodunit card <report.json> --inline [--actions]\nSave in this Codex thread's visualization folder. Add --actions only when the client supports native codex-followup controls; otherwise ask in text.\n" +
+                "whodunit card <report.json> --inline\nSave in this Codex thread's visualization folder and ask the fix question in text.\n" +
                 "whodunit card <report.json> --output REPORT.html\nSave the interactive browser report and print a short terminal summary.\n");
             return 0;
         }
-        if ([3, 4].includes(args.length) &&
-            args[2] === "--inline" &&
-            (args.length === 3 || args[3] === "--actions")) {
+        if (args.length === 3 && args[2] === "--inline") {
             try {
                 if (!args[1] || args[1].startsWith("-"))
                     throw new InputError("Choose a report JSON file.");
@@ -210,7 +207,7 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
                     throw new InputError("This client cannot save a Codex inline report. Use --output for a browser report.");
                 const card = parseDebugCard(parseJson(io.read(args[1])));
                 const options = {
-                    ...reportOptions(args[1], "inline"),
+                    ...reportOptions(args[1]),
                     changesRecorded: card.repair?.status === "changed",
                 };
                 const fragment = renderDebugCard(card);
@@ -218,9 +215,8 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
                     ...options,
                     interactive: false,
                 });
-                const followups = `${question}\n${args[3] === "--actions" ? `\n${nativeFollowups(options)}` : ""}`;
                 const path = io.inline(fragment);
-                io.out(`visualize${JSON.stringify({ path })}\n\n${followups}`);
+                io.out(`visualize${JSON.stringify({ path })}\n\n${question}\n`);
                 return 0;
             }
             catch (error) {
@@ -240,7 +236,7 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
                     throw new InputError("Choose a report JSON file.");
                 if (!io.write)
                     throw new InputError("This client cannot save a browser report.");
-                const data = parseJson(io.read(args[1])), path = resolve(target), options = reportOptions(args[1], "browser"), html = renderDebugDocument(data, options);
+                const data = parseJson(io.read(args[1])), path = resolve(target), options = reportOptions(args[1]), html = renderDebugDocument(data);
                 io.write(path, html);
                 io.out(renderTerminalSummary(data, path, options));
                 await askForFix(options);
@@ -263,12 +259,12 @@ export async function dispatchCli(args, io, _env = {}, _dependencies = {}, local
         try {
             const data = parseJson(io.read(args[1]));
             io.out(format === "html"
-                ? renderDebugDocument(data, reportOptions(args[1], "browser"))
+                ? renderDebugDocument(data)
                 : format === "fragment"
-                    ? renderDebugCard(data, reportOptions(args[1], "inline"))
-                    : renderDebugText(data, reportOptions(args[1], "browser")));
+                    ? renderDebugCard(data)
+                    : renderDebugText(data, reportOptions(args[1])));
             if (format === "text")
-                await askForFix(reportOptions(args[1], "browser"));
+                await askForFix(reportOptions(args[1]));
             return 0;
         }
         catch (error) {
